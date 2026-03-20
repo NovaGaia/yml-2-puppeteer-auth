@@ -1,0 +1,25 @@
+name: "Login simple"
+
+authentication:
+  url: "https://example.com/login"
+  steps:
+    - action: waitForSelector
+      selector: "input[type='email']"
+      timeout: 10000
+    - action: fill
+      selector: "input[type='email']"
+      valueEnv: "LOGIN_VALUE"
+    - action: fill
+      selector: "input[type='password']"
+      valueEnv: "PASS_VALUE"
+    - action: click
+      selector: "button[type='submit']"
+    - action: waitForNavigation
+
+verification:
+  - type: url
+    contains: "/dashboard"
+    required: true
+
+options:
+  timeout: 30000

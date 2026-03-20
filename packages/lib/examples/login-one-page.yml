@@ -1,0 +1,24 @@
+name: "Login une page (WordPress)"
+
+authentication:
+  url: "https://example.com/wp-login.php"
+  steps:
+    - action: waitForSelector
+      selector: "#user_login"
+    - action: fill
+      selector: "#user_login"
+      valueEnv: "LOGIN_VALUE"
+    - action: fill
+      selector: "#user_pass"
+      valueEnv: "PASS_VALUE"
+    - action: click
+      selector: "#wp-submit"
+    - action: waitForNavigation
+
+verification:
+  - type: cookie
+    name: "wordpress_logged_in_"
+    required: true
+
+options:
+  timeout: 30000

@@ -1,0 +1,33 @@
+name: "Login avec détection d'erreurs"
+
+authentication:
+  url: "https://example.com/login"
+  steps:
+    - action: waitForSelector
+      selector: "input[type='email']"
+      errorSelector: ".login-error-banner"
+    - action: fill
+      selector: "input[type='email']"
+      valueEnv: "LOGIN_VALUE"
+    - action: fill
+      selector: "input[type='password']"
+      valueEnv: "PASS_VALUE"
+    - action: click
+      selector: "button[type='submit']"
+    - action: waitForSelector
+      selector: ".dashboard-welcome"
+      errorSelector: ".error-message"
+      timeout: 15000
+    - action: assertNotPresent
+      selector: ".login-error"
+
+verification:
+  - type: url
+    contains: "/dashboard"
+    required: true
+  - type: cookie
+    name: "session_id"
+    required: true
+
+options:
+  timeout: 30000
