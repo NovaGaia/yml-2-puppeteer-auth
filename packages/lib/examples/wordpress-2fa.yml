@@ -1,0 +1,39 @@
+name: 'WordPress avec Wordfence 2FA'
+
+authentication:
+  url: 'https://greenit.eco/wp-login.php'
+  steps:
+    - action: waitForSelector
+      selector: '#user_login'
+
+    - action: fill
+      selector: '#user_login'
+      valueEnv: 'LOGIN_VALUE'
+
+    - action: fill
+      selector: '#user_pass'
+      valueEnv: 'PASS_VALUE'
+
+    - action: click
+      selector: '#wp-submit'
+
+    - action: waitForSelector
+      selector: '#wfls-token'
+
+    - action: fill
+      selector: '#wfls-token'
+      valueEnv: 'TOTP_SECRET'
+      valueType: totp
+
+    - action: click
+      selector: '#wfls-token-submit'
+
+    - action: waitForNavigation
+
+verification:
+  - type: url
+    contains: '/wp-admin'
+    required: true
+
+options:
+  timeout: 30000

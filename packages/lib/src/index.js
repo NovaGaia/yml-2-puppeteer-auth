@@ -8,7 +8,7 @@ import { ValidationError } from './errors.js'
 export class AuthScenario {
   constructor(configPath, options = {}) {
     this.configPath = configPath
-    this.options = { timeout: 30000, debug: false, ...options }
+    this.options = { timeout: options.timeout ?? 30000, debug: options.debug ?? false }
   }
 
   async validate() {
@@ -36,6 +36,7 @@ export class AuthScenario {
     const stepResults = []
 
     try {
+      await page.goto(raw.authentication.url, { waitUntil: 'load', timeout: this.options.timeout })
       const steps = raw.authentication?.steps ?? []
       for (let i = 0; i < steps.length; i++) {
         const t0 = Date.now()
@@ -64,10 +65,10 @@ export class AuthScenario {
   }
 
   async _saveFailureScreenshot(page, screenshotsDir, stepIndex) {
+    if (!screenshotsDir) return null
     try {
-      const dir = screenshotsDir ?? '.'
       const ts = new Date().toISOString().replace(/[:.]/g, '-')
-      const filePath = `${dir}/auth-failure-step${stepIndex}-${ts}.png`
+      const filePath = `${screenshotsDir}/auth-failure-step${stepIndex}-${ts}.png`
       await page.screenshot({ path: filePath })
       return filePath
     } catch {

@@ -18,6 +18,7 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "node --env-file=.env src/cli/cli.js test examples/wordpress-2fa.yml --headed",
     "lint": "eslint src"
   },
   "dependencies": {
