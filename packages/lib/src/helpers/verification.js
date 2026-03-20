@@ -9,15 +9,8 @@ async function checkOne(page, v) {
       break
     }
     case 'localStorage': {
-      const storage = await page.evaluate(() => {
-        const data = {}
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i)
-          data[k] = localStorage.getItem(k)
-        }
-        return data
-      })
-      if (!storage[v.key]) throw new VerificationError(`localStorage key "${v.key}" not found or empty`)
+      const value = await page.evaluate((key) => localStorage.getItem(key), v.key)
+      if (!value) throw new VerificationError(`localStorage key "${v.key}" not found or empty`)
       break
     }
     case 'url': {

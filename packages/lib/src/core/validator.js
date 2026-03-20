@@ -1,4 +1,5 @@
 const VALID_ACTIONS = ['fill', 'click', 'waitForSelector', 'waitForNavigation', 'assertNotPresent', 'wait']
+const VALID_VERIFICATION_MODES = ['all', 'any']
 
 const STEP_REQUIRED_FIELDS = {
   fill: ['selector', 'valueEnv'],
@@ -54,6 +55,11 @@ export class Validator {
         }
       }
     })
+
+    const verificationMode = config.options?.verificationMode
+    if (verificationMode !== undefined && !VALID_VERIFICATION_MODES.includes(verificationMode)) {
+      errors.push({ path: 'options.verificationMode', message: `Must be 'all' or 'any', got '${verificationMode}'` })
+    }
 
     return { valid: errors.length === 0, errors }
   }

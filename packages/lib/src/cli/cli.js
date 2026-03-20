@@ -28,11 +28,11 @@ program
 
       console.log('✓ YAML valid')
 
+      const steps = raw.authentication?.steps ?? []
+      const envRefs = steps.filter(s => s.valueEnv).map(s => s.valueEnv)
+
       try {
         ConfigLoader.checkEnvVars(raw)
-        const envRefs = (raw.authentication?.steps ?? [])
-          .filter(s => s.valueEnv)
-          .map(s => s.valueEnv)
         if (envRefs.length > 0) {
           console.log(`✓ Environment variables present (${envRefs.join(', ')})`)
         }
@@ -41,7 +41,6 @@ program
         process.exit(1)
       }
 
-      const steps = raw.authentication?.steps ?? []
       console.log(`\nSteps: ${steps.length}`)
       steps.forEach((s, i) => {
         const detail = s.valueEnv ? ` ← ${s.valueEnv}` : ''

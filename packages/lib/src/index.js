@@ -4,11 +4,14 @@ import { ConfigLoader } from './core/config-loader.js'
 import { Validator } from './core/validator.js'
 import { Interpreter } from './core/interpreter.js'
 import { ValidationError } from './errors.js'
+import { DEFAULT_TIMEOUT } from './helpers/wait-utils.js'
+
+const ISO_REPLACE = /[:.]/g
 
 export class AuthScenario {
   constructor(configPath, options = {}) {
     this.configPath = configPath
-    this.options = { timeout: options.timeout ?? 30000, debug: options.debug ?? false }
+    this.options = { timeout: options.timeout ?? DEFAULT_TIMEOUT, debug: options.debug ?? false }
   }
 
   async validate() {
@@ -67,7 +70,7 @@ export class AuthScenario {
   async _saveFailureScreenshot(page, screenshotsDir, stepIndex) {
     if (!screenshotsDir) return null
     try {
-      const ts = new Date().toISOString().replace(/[:.]/g, '-')
+      const ts = new Date().toISOString().replace(ISO_REPLACE, '-')
       const filePath = `${screenshotsDir}/auth-failure-step${stepIndex}-${ts}.png`
       await page.screenshot({ path: filePath })
       return filePath

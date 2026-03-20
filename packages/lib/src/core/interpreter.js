@@ -1,12 +1,13 @@
 import { authenticator } from 'otplib'
 import { InterpreterError } from '../errors.js'
 import { runVerifications } from '../helpers/verification.js'
+import { DEFAULT_TIMEOUT } from '../helpers/wait-utils.js'
 
 export class Interpreter {
   constructor(config, page, options = {}) {
     this.config = config
     this.page = page
-    this.options = { timeout: 30000, ...options }
+    this.options = { timeout: DEFAULT_TIMEOUT, ...options }
   }
 
   async executeStep(step, index) {
@@ -38,18 +39,15 @@ export class Interpreter {
     await runVerifications(this.page, verifications, { verificationMode: mode })
   }
 
+  _resolveEnvVar(step, index) {
+    const value = process.env[step.valueEnv]
+    if (!value) throw new InterpreterError(`Missing env var: ${step.valueEnv}`, index)
+    return value
+  }
+
   async _fill(step, index) {
-    let value
-    if (step.valueType === 'totp') {
-      const secret = process.env[step.valueEnv]
-      if (!secret) throw new InterpreterError(`Missing env var: ${step.valueEnv}`, index)
-      value = authenticator.generate(secret)
-    } else {
-      value = process.env[step.valueEnv]
-      if (value === undefined) {
-        throw new InterpreterError(`Missing env var: ${step.valueEnv}`, index)
-      }
-    }
+    const raw = this._resolveEnvVar(step, index)
+    const value = step.valueType === 'totp' ? authenticator.generate(raw) : raw
     try {
       await this.page.type(step.selector, value)
     } catch (e) {
@@ -81,6 +79,7 @@ export class Interpreter {
             index
           )
         })
+        error.catch(() => {}) // suppress unhandled rejection if main wins the race
         await Promise.race([main, error])
       } else {
         await this.page.waitForSelector(step.selector, { timeout })

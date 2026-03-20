@@ -7,6 +7,7 @@ module.exports = async (props) => {
   const { Validator } = await import('../src/core/validator.js')
   const { Interpreter } = await import('../src/core/interpreter.js')
   const { ValidationError } = await import('../src/errors.js')
+  const { DEFAULT_TIMEOUT } = await import('../src/helpers/wait-utils.js')
 
   const configPath = process.env.AUTH_CONFIG
   if (!configPath) {
@@ -21,7 +22,7 @@ module.exports = async (props) => {
   if (!validationResult.valid) throw new ValidationError(validationResult.errors)
   ConfigLoader.checkEnvVars(raw)
 
-  const timeout = process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : 30000
+  const timeout = process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : DEFAULT_TIMEOUT
   const debug = process.env.DEBUG === 'true'
 
   if (debug) {
@@ -30,7 +31,7 @@ module.exports = async (props) => {
     console.log(`[auth-scenario] steps: ${raw.authentication.steps.length}`)
   }
 
-  await page.goto(raw.authentication.url, { waitUntil: 'load', timeout })
+  // authenticate() handles page.goto + steps execution
   const interpreter = new Interpreter(raw, page, { timeout })
   await interpreter.authenticate()
   await interpreter.verify()
