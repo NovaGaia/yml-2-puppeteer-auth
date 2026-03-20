@@ -1,0 +1,28 @@
+name: 'Keycloak - Login simple'
+
+authentication:
+  url: 'http://localhost:8080/realms/test-auth/protocol/openid-connect/auth?client_id=test-app&redirect_uri=http://localhost:3000/&response_type=code'
+  steps:
+    - action: waitForSelector
+      selector: '#username'
+
+    - action: fill
+      selector: '#username'
+      valueEnv: 'KC_USER'
+
+    - action: fill
+      selector: '#password'
+      valueEnv: 'KC_PASS'
+
+    - action: click
+      selector: '#kc-login'
+
+    - action: waitForNavigation
+
+verification:
+  - type: url
+    contains: 'localhost:3000'
+    required: true
+
+options:
+  timeout: 15000

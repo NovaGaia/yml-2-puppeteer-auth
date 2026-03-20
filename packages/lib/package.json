@@ -19,6 +19,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "node --env-file=.env src/cli/cli.js test examples/wordpress-2fa.yml --headed",
+    "e2e:start": "docker compose -f e2e/docker-compose.yml up -d --wait",
+    "e2e:stop": "docker compose -f e2e/docker-compose.yml down",
+    "e2e:login": "node --env-file=e2e/.env.e2e src/cli/cli.js test e2e/scenarios/login-simple.yml",
+    "e2e:totp": "node --env-file=e2e/.env.e2e src/cli/cli.js test e2e/scenarios/login-totp.yml",
+    "e2e:error": "node --env-file=e2e/.env.e2e src/cli/cli.js test e2e/scenarios/login-error.yml",
     "lint": "eslint src"
   },
   "dependencies": {

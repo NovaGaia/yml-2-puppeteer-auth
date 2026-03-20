@@ -1,0 +1,34 @@
+name: 'Keycloak - Détection erreur login'
+
+# Ce scénario DOIT échouer : il valide que errorSelector détecte bien
+# le message d'erreur Keycloak quand le mot de passe est incorrect.
+# Utiliser avec KC_PASS_WRONG=wrongpassword
+
+authentication:
+  url: 'http://localhost:8080/realms/test-auth/protocol/openid-connect/auth?client_id=test-app&redirect_uri=http://localhost:3000/&response_type=code'
+  steps:
+    - action: waitForSelector
+      selector: '#username'
+
+    - action: fill
+      selector: '#username'
+      valueEnv: 'KC_USER'
+
+    - action: fill
+      selector: '#password'
+      valueEnv: 'KC_PASS_WRONG'
+
+    - action: click
+      selector: '#kc-login'
+
+    - action: waitForSelector
+      selector: '#kc-content'
+      errorSelector: '#input-error'
+
+verification:
+  - type: url
+    contains: 'localhost:3000'
+    required: true
+
+options:
+  timeout: 15000
