@@ -49,7 +49,7 @@ export class Validator {
     verifications.forEach((v, i) => {
       const required = VERIFICATION_REQUIRED_FIELDS[v.type] ?? []
       for (const field of required) {
-        if (!v[field]) {
+        if (v[field] === undefined || v[field] === null || v[field] === '') {
           errors.push({ path: `verification[${i}].${field}`, message: 'Required field missing' })
         }
       }
