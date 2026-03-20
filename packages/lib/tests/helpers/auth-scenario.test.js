@@ -10,6 +10,7 @@ vi.mock('puppeteer', () => ({
   default: {
     launch: vi.fn().mockResolvedValue({
       newPage: vi.fn().mockResolvedValue({
+        goto: vi.fn().mockResolvedValue(undefined),
         on: vi.fn(),
         type: vi.fn().mockResolvedValue(undefined),
         click: vi.fn().mockResolvedValue(undefined),
@@ -74,6 +75,7 @@ describe('AuthScenario', () => {
       const puppeteer = await import('puppeteer')
       puppeteer.default.launch.mockResolvedValueOnce({
         newPage: vi.fn().mockResolvedValue({
+          goto: vi.fn().mockResolvedValue(undefined),
           on: vi.fn(),
           type: vi.fn().mockRejectedValue(new Error('Element not found')),
           click: vi.fn(),

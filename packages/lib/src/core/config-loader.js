@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import yaml from 'js-yaml'
-import { FileNotFoundError, ParseError } from '../errors.js'
+import { FileNotFoundError, ParseError, ValidationError } from '../errors.js'
 
 export class ConfigLoader {
   static async load(filePath) {
@@ -32,9 +32,10 @@ export class ConfigLoader {
     const steps = config.authentication?.steps ?? []
     for (const step of steps) {
       if (step.valueEnv && process.env[step.valueEnv] === undefined) {
-        throw new Error(
-          `Missing environment variable: ${step.valueEnv} (referenced in step action: ${step.action})`
-        )
+        throw new ValidationError([{
+          path: `authentication.steps[?].valueEnv`,
+          message: `Missing environment variable: ${step.valueEnv} (referenced in step action: ${step.action})`
+        }])
       }
     }
   }

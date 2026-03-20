@@ -22,6 +22,10 @@ export class Interpreter {
   }
 
   async authenticate() {
+    const url = this.config.authentication?.url
+    if (url) {
+      await this.page.goto(url, { waitUntil: 'load', timeout: this.options.timeout })
+    }
     const steps = this.config.authentication?.steps ?? []
     for (let i = 0; i < steps.length; i++) {
       await this.executeStep(steps[i], i)

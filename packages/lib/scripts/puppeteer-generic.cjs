@@ -30,6 +30,7 @@ module.exports = async (props) => {
     console.log(`[auth-scenario] steps: ${raw.authentication.steps.length}`)
   }
 
+  await page.goto(raw.authentication.url, { waitUntil: 'load', timeout })
   const interpreter = new Interpreter(raw, page, { timeout })
   await interpreter.authenticate()
   await interpreter.verify()

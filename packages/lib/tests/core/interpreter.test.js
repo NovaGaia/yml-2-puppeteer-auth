@@ -3,6 +3,7 @@ import { Interpreter } from '../../src/core/interpreter.js'
 import { InterpreterError } from '../../src/errors.js'
 
 const makePage = (overrides = {}) => ({
+  goto: vi.fn().mockResolvedValue(undefined),
   type: vi.fn().mockResolvedValue(undefined),
   click: vi.fn().mockResolvedValue(undefined),
   waitForSelector: vi.fn().mockResolvedValue({ evaluate: async () => '' }),
@@ -150,6 +151,7 @@ describe('Interpreter — authenticate() and verify()', () => {
     const page = makePage()
     const config = {
       authentication: {
+        url: 'https://example.com/login',
         steps: [
           { action: 'fill', selector: 'input', valueEnv: 'LOGIN_VALUE' },
           { action: 'click', selector: 'button' },
@@ -158,6 +160,7 @@ describe('Interpreter — authenticate() and verify()', () => {
     }
     const interpreter = new Interpreter(config, page)
     await interpreter.authenticate()
+    expect(page.goto).toHaveBeenCalledWith('https://example.com/login', expect.objectContaining({ waitUntil: 'load' }))
     expect(page.type).toHaveBeenCalledTimes(1)
     expect(page.click).toHaveBeenCalledTimes(1)
     delete process.env.LOGIN_VALUE
