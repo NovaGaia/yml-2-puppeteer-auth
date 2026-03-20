@@ -1,9 +1,10 @@
 import ScenarioList from './components/ScenarioList'
 import YamlEditor from './components/editor/YamlEditor'
+import ImportExportBar from './components/ImportExportBar'
 import { useScenario } from './hooks/useScenario'
 
 export default function App() {
-  const { scenarios, selected, setSelected, create, update, remove } = useScenario()
+  const { scenarios, selected, setSelected, create, update, remove, reload } = useScenario()
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
@@ -17,23 +18,30 @@ export default function App() {
         />
       </aside>
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {selected ? (
-          <>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #ddd' }}>
-              <strong>{selected.name}</strong>
-            </div>
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <YamlEditor
-                value={selected.yaml_content}
-                onChange={update}
-              />
-            </div>
-          </>
-        ) : (
-          <div style={{ padding: 16, color: '#999' }}>Sélectionner ou créer un scénario</div>
-        )}
-      </main>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <ImportExportBar
+          selected={selected}
+          onImported={(s) => { setSelected(s); reload() }}
+        />
+
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {selected ? (
+            <>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid #ddd' }}>
+                <strong>{selected.name}</strong>
+              </div>
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                <YamlEditor
+                  value={selected.yaml_content}
+                  onChange={update}
+                />
+              </div>
+            </>
+          ) : (
+            <div style={{ padding: 16, color: '#999' }}>Sélectionner ou créer un scénario</div>
+          )}
+        </main>
+      </div>
     </div>
   )
 }

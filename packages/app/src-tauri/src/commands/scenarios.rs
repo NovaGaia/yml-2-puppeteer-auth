@@ -98,6 +98,122 @@ pub async fn delete_scenario(
     Ok(())
 }
 
+#[derive(Debug, serde::Serialize)]
+pub struct ImportResult {
+    pub name: String,
+    pub content: String,
+    pub existing_id: Option<String>,
+}
+
+#[tauri::command]
+pub async fn import_yaml(
+    file_path: String,
+    pool: tauri::State<'_, SqlitePool>,
+) -> Result<ImportResult, String> {
+    let content = std::fs::read_to_string(&file_path).map_err(|e| e.to_string())?;
+    let name = extract_yaml_name(&content).unwrap_or_else(|| "Scénario importé".to_string());
+
+    let existing: Option<Scenario> = sqlx::query_as(
+        "SELECT id, name, yaml_content, created_at, updated_at FROM scenarios WHERE name = ?",
+    )
+    .bind(&name)
+    .fetch_optional(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(ImportResult {
+        name,
+        content,
+        existing_id: existing.map(|s| s.id),
+    })
+}
+
+#[tauri::command]
+pub async fn confirm_import(
+    name: String,
+    yaml_content: String,
+    replace_id: Option<String>,
+    pool: tauri::State<'_, SqlitePool>,
+) -> Result<Scenario, String> {
+    let now = now_ms();
+
+    if let Some(id) = replace_id {
+        sqlx::query("UPDATE scenarios SET name = ?, yaml_content = ?, updated_at = ? WHERE id = ?")
+            .bind(&name)
+            .bind(&yaml_content)
+            .bind(now)
+            .bind(&id)
+            .execute(pool.inner())
+            .await
+            .map_err(|e| e.to_string())?;
+        return Ok(Scenario { id, name, yaml_content, created_at: now, updated_at: now });
+    }
+
+    let unique_name = find_unique_name(&name, pool.inner()).await?;
+    let id = Uuid::new_v4().to_string();
+
+    sqlx::query(
+        "INSERT INTO scenarios (id, name, yaml_content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+    )
+    .bind(&id)
+    .bind(&unique_name)
+    .bind(&yaml_content)
+    .bind(now)
+    .bind(now)
+    .execute(pool.inner())
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(Scenario { id, name: unique_name, yaml_content, created_at: now, updated_at: now })
+}
+
+#[tauri::command]
+pub async fn export_yaml(
+    file_path: String,
+    yaml_content: String,
+) -> Result<(), String> {
+    std::fs::write(&file_path, yaml_content).map_err(|e| e.to_string())
+}
+
+fn extract_yaml_name(yaml: &str) -> Option<String> {
+    for line in yaml.lines() {
+        if let Some(rest) = line.strip_prefix("name:") {
+            let name = rest.trim().trim_matches('"').trim_matches('\'');
+            if !name.is_empty() {
+                return Some(name.to_string());
+            }
+        }
+    }
+    None
+}
+
+async fn find_unique_name(base: &str, pool: &SqlitePool) -> Result<String, String> {
+    let exists: Option<(String,)> = sqlx::query_as("SELECT id FROM scenarios WHERE name = ?")
+        .bind(base)
+        .fetch_optional(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if exists.is_none() {
+        return Ok(base.to_string());
+    }
+
+    for i in 2..=100 {
+        let candidate = format!("{}_{}", base, i);
+        let exists: Option<(String,)> =
+            sqlx::query_as("SELECT id FROM scenarios WHERE name = ?")
+                .bind(&candidate)
+                .fetch_optional(pool)
+                .await
+                .map_err(|e| e.to_string())?;
+        if exists.is_none() {
+            return Ok(candidate);
+        }
+    }
+
+    Err("impossible de trouver un nom unique".to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
