@@ -146,7 +146,12 @@ pub async fn confirm_import(
             .execute(pool.inner())
             .await
             .map_err(|e| e.to_string())?;
-        return Ok(Scenario { id, name, yaml_content, created_at: now, updated_at: now });
+        let row = sqlx::query_as::<_, Scenario>("SELECT id, name, yaml_content, created_at, updated_at FROM scenarios WHERE id = ?")
+            .bind(&id)
+            .fetch_one(pool.inner())
+            .await
+            .map_err(|e| e.to_string())?;
+        return Ok(row);
     }
 
     let unique_name = find_unique_name(&name, pool.inner()).await?;

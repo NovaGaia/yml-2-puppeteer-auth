@@ -22,6 +22,7 @@ export default function RunnerPanel({ scenario }: Props) {
   const [logs, setLogs] = useState<string[]>([])
   const [result, setResult] = useState<boolean | null>(null)
   const logsEndRef = useRef<HTMLDivElement>(null)
+  const unlistenRef = useRef<(() => void) | null>(null)
 
   const valueEnvs = extractValueEnvs(scenario.yaml_content)
   const allFilled = valueEnvs.every((k) => credentials[k]?.trim())
@@ -40,6 +41,13 @@ export default function RunnerPanel({ scenario }: Props) {
     setCredentials((prev) => ({ ...prev, [key]: value }))
   }
 
+  useEffect(() => {
+    return () => {
+      unlistenRef.current?.()
+      unlistenRef.current = null
+    }
+  }, [])
+
   const handleRun = useCallback(async () => {
     setRunning(true)
     setLogs([])
@@ -48,6 +56,7 @@ export default function RunnerPanel({ scenario }: Props) {
     const unlisten = await listen<string>('runner-log', (event) => {
       setLogs((prev) => [...prev, event.payload])
     })
+    unlistenRef.current = unlisten
 
     try {
       const success = await invoke<boolean>('run_scenario', {
@@ -63,6 +72,7 @@ export default function RunnerPanel({ scenario }: Props) {
       setResult(false)
     } finally {
       unlisten()
+      unlistenRef.current = null
       setRunning(false)
     }
   }, [scenario.yaml_content, credentials, headed])
