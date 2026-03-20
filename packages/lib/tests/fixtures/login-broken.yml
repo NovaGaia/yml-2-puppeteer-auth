@@ -1,0 +1,5 @@
+name: broken
+authentication:
+  steps:
+    - action: fill
+      selector: [invalid yaml: {unclosed

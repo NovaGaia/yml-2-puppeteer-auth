@@ -1,0 +1,13 @@
+name: "Login simple"
+authentication:
+  url: "https://example.com/login"
+  steps:
+    - action: fill
+      selector: "input[type='email']"
+      valueEnv: "LOGIN_VALUE"
+    - action: click
+      selector: "button[type='submit']"
+verification:
+  - type: url
+    contains: "/dashboard"
+    required: true
