@@ -4,6 +4,9 @@ use std::process::{Command, Stdio};
 use tauri::{AppHandle, Emitter, Manager};
 use uuid::Uuid;
 
+const NODE_NOT_FOUND: &str =
+    "Node.js introuvable. Installez Node.js depuis https://nodejs.org";
+
 #[derive(Debug, serde::Deserialize)]
 pub struct RunPayload {
     // Design note: we pass yaml_content directly (not scenario_id) so that
@@ -41,7 +44,7 @@ pub async fn run_scenario(
 
     let mut child = cmd.spawn().map_err(|e| {
         if e.kind() == std::io::ErrorKind::NotFound {
-            "Node.js introuvable. Installez Node.js depuis https://nodejs.org".to_string()
+            NODE_NOT_FOUND.to_string()
         } else {
             e.to_string()
         }
@@ -50,8 +53,7 @@ pub async fn run_scenario(
     let app_stdout = app.clone();
     let stdout = child.stdout.take().unwrap();
     let stdout_thread = std::thread::spawn(move || {
-        let reader = BufReader::new(stdout);
-        for line in reader.lines().flatten() {
+        for line in BufReader::new(stdout).lines().flatten() {
             let _ = app_stdout.emit("runner-log", &line);
         }
     });
@@ -59,8 +61,7 @@ pub async fn run_scenario(
     let app_stderr = app.clone();
     let stderr = child.stderr.take().unwrap();
     let stderr_thread = std::thread::spawn(move || {
-        let reader = BufReader::new(stderr);
-        for line in reader.lines().flatten() {
+        for line in BufReader::new(stderr).lines().flatten() {
             let _ = app_stderr.emit("runner-log", format!("[err] {}", line));
         }
     });
@@ -79,12 +80,12 @@ pub fn check_node() -> Result<String, String> {
     let output = Command::new("node")
         .arg("--version")
         .output()
-        .map_err(|_| "Node.js introuvable. Installez Node.js depuis https://nodejs.org".to_string())?;
+        .map_err(|_| NODE_NOT_FOUND.to_string())?;
 
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
     } else {
-        Err("Node.js introuvable. Installez Node.js depuis https://nodejs.org".to_string())
+        Err(NODE_NOT_FOUND.to_string())
     }
 }
 

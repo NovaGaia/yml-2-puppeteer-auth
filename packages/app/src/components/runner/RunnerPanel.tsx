@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Scenario } from '../../types'
 import CredentialsForm from './CredentialsForm'
 
@@ -24,8 +24,8 @@ export default function RunnerPanel({ scenario }: Props) {
   const logsEndRef = useRef<HTMLDivElement>(null)
   const unlistenRef = useRef<(() => void) | null>(null)
 
-  const valueEnvs = extractValueEnvs(scenario.yaml_content)
-  const allFilled = valueEnvs.every((k) => credentials[k]?.trim())
+  const valueEnvs = useMemo(() => extractValueEnvs(scenario.yaml_content), [scenario.yaml_content])
+  const allFilled = useMemo(() => valueEnvs.every((k) => credentials[k]?.trim()), [valueEnvs, credentials])
 
   useEffect(() => {
     setCredentials({})
@@ -49,6 +49,7 @@ export default function RunnerPanel({ scenario }: Props) {
   }, [])
 
   const handleRun = useCallback(async () => {
+    unlistenRef.current?.()
     setRunning(true)
     setLogs([])
     setResult(null)

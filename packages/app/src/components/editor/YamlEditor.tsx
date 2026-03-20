@@ -2,6 +2,8 @@ import CodeMirror from '@uiw/react-codemirror'
 import { yaml } from '@codemirror/lang-yaml'
 import { useCallback, useEffect, useState } from 'react'
 
+const YAML_EXTENSIONS = [yaml()]
+
 interface Props {
   value: string
   onChange: (value: string) => void
@@ -29,7 +31,7 @@ export default function YamlEditor({ value, onChange, debounceMs = 300 }: Props)
     <CodeMirror
       value={local}
       height="100%"
-      extensions={[yaml()]}
+      extensions={YAML_EXTENSIONS}
       onChange={handleChange}
       theme="light"
       style={{ height: '100%', fontSize: 13 }}

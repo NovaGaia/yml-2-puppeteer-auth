@@ -3,6 +3,13 @@ use sqlx::SqlitePool;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
+const SELECT_ALL: &str =
+    "SELECT id, name, yaml_content, created_at, updated_at FROM scenarios ORDER BY updated_at DESC";
+const SELECT_BY_ID: &str =
+    "SELECT id, name, yaml_content, created_at, updated_at FROM scenarios WHERE id = ?";
+const SELECT_BY_NAME: &str =
+    "SELECT id, name, yaml_content, created_at, updated_at FROM scenarios WHERE name = ?";
+
 fn now_ms() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -10,36 +17,10 @@ fn now_ms() -> i64 {
         .as_millis() as i64
 }
 
-#[tauri::command]
-pub async fn list_scenarios(
-    pool: tauri::State<'_, SqlitePool>,
-) -> Result<Vec<Scenario>, String> {
-    sqlx::query_as::<_, Scenario>(
-        "SELECT id, name, yaml_content, created_at, updated_at FROM scenarios ORDER BY updated_at DESC",
-    )
-    .fetch_all(pool.inner())
-    .await
-    .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-pub async fn get_scenario(
-    id: String,
-    pool: tauri::State<'_, SqlitePool>,
-) -> Result<Option<Scenario>, String> {
-    sqlx::query_as::<_, Scenario>(
-        "SELECT id, name, yaml_content, created_at, updated_at FROM scenarios WHERE id = ?",
-    )
-    .bind(&id)
-    .fetch_optional(pool.inner())
-    .await
-    .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-pub async fn create_scenario(
-    payload: CreateScenarioPayload,
-    pool: tauri::State<'_, SqlitePool>,
+async fn db_insert_scenario(
+    pool: &SqlitePool,
+    name: String,
+    yaml_content: String,
 ) -> Result<Scenario, String> {
     let now = now_ms();
     let id = Uuid::new_v4().to_string();
@@ -48,21 +29,65 @@ pub async fn create_scenario(
         "INSERT INTO scenarios (id, name, yaml_content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
     )
     .bind(&id)
-    .bind(&payload.name)
-    .bind(&payload.yaml_content)
+    .bind(&name)
+    .bind(&yaml_content)
     .bind(now)
     .bind(now)
-    .execute(pool.inner())
+    .execute(pool)
     .await
     .map_err(|e| e.to_string())?;
 
-    Ok(Scenario {
-        id,
-        name: payload.name,
-        yaml_content: payload.yaml_content,
-        created_at: now,
-        updated_at: now,
-    })
+    Ok(Scenario { id, name, yaml_content, created_at: now, updated_at: now })
+}
+
+async fn db_update_scenario(
+    pool: &SqlitePool,
+    id: &str,
+    name: &str,
+    yaml_content: &str,
+) -> Result<(), String> {
+    let now = now_ms();
+
+    sqlx::query("UPDATE scenarios SET name = ?, yaml_content = ?, updated_at = ? WHERE id = ?")
+        .bind(name)
+        .bind(yaml_content)
+        .bind(now)
+        .bind(id)
+        .execute(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn list_scenarios(
+    pool: tauri::State<'_, SqlitePool>,
+) -> Result<Vec<Scenario>, String> {
+    sqlx::query_as::<_, Scenario>(SELECT_ALL)
+        .fetch_all(pool.inner())
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_scenario(
+    id: String,
+    pool: tauri::State<'_, SqlitePool>,
+) -> Result<Option<Scenario>, String> {
+    sqlx::query_as::<_, Scenario>(SELECT_BY_ID)
+        .bind(&id)
+        .fetch_optional(pool.inner())
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn create_scenario(
+    payload: CreateScenarioPayload,
+    pool: tauri::State<'_, SqlitePool>,
+) -> Result<Scenario, String> {
+    db_insert_scenario(pool.inner(), payload.name, payload.yaml_content).await
 }
 
 #[tauri::command]
@@ -70,18 +95,7 @@ pub async fn update_scenario(
     payload: UpdateScenarioPayload,
     pool: tauri::State<'_, SqlitePool>,
 ) -> Result<(), String> {
-    let now = now_ms();
-
-    sqlx::query("UPDATE scenarios SET name = ?, yaml_content = ?, updated_at = ? WHERE id = ?")
-        .bind(&payload.name)
-        .bind(&payload.yaml_content)
-        .bind(now)
-        .bind(&payload.id)
-        .execute(pool.inner())
-        .await
-        .map_err(|e| e.to_string())?;
-
-    Ok(())
+    db_update_scenario(pool.inner(), &payload.id, &payload.name, &payload.yaml_content).await
 }
 
 #[tauri::command]
@@ -113,13 +127,11 @@ pub async fn import_yaml(
     let content = std::fs::read_to_string(&file_path).map_err(|e| e.to_string())?;
     let name = extract_yaml_name(&content).unwrap_or_else(|| "Scénario importé".to_string());
 
-    let existing: Option<Scenario> = sqlx::query_as(
-        "SELECT id, name, yaml_content, created_at, updated_at FROM scenarios WHERE name = ?",
-    )
-    .bind(&name)
-    .fetch_optional(pool.inner())
-    .await
-    .map_err(|e| e.to_string())?;
+    let existing: Option<Scenario> = sqlx::query_as(SELECT_BY_NAME)
+        .bind(&name)
+        .fetch_optional(pool.inner())
+        .await
+        .map_err(|e| e.to_string())?;
 
     Ok(ImportResult {
         name,
@@ -135,41 +147,17 @@ pub async fn confirm_import(
     replace_id: Option<String>,
     pool: tauri::State<'_, SqlitePool>,
 ) -> Result<Scenario, String> {
-    let now = now_ms();
-
     if let Some(id) = replace_id {
-        sqlx::query("UPDATE scenarios SET name = ?, yaml_content = ?, updated_at = ? WHERE id = ?")
-            .bind(&name)
-            .bind(&yaml_content)
-            .bind(now)
-            .bind(&id)
-            .execute(pool.inner())
-            .await
-            .map_err(|e| e.to_string())?;
-        let row = sqlx::query_as::<_, Scenario>("SELECT id, name, yaml_content, created_at, updated_at FROM scenarios WHERE id = ?")
+        db_update_scenario(pool.inner(), &id, &name, &yaml_content).await?;
+        return sqlx::query_as::<_, Scenario>(SELECT_BY_ID)
             .bind(&id)
             .fetch_one(pool.inner())
             .await
-            .map_err(|e| e.to_string())?;
-        return Ok(row);
+            .map_err(|e| e.to_string());
     }
 
     let unique_name = find_unique_name(&name, pool.inner()).await?;
-    let id = Uuid::new_v4().to_string();
-
-    sqlx::query(
-        "INSERT INTO scenarios (id, name, yaml_content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-    )
-    .bind(&id)
-    .bind(&unique_name)
-    .bind(&yaml_content)
-    .bind(now)
-    .bind(now)
-    .execute(pool.inner())
-    .await
-    .map_err(|e| e.to_string())?;
-
-    Ok(Scenario { id, name: unique_name, yaml_content, created_at: now, updated_at: now })
+    db_insert_scenario(pool.inner(), unique_name, yaml_content).await
 }
 
 #[tauri::command]
@@ -181,37 +169,32 @@ pub async fn export_yaml(
 }
 
 fn extract_yaml_name(yaml: &str) -> Option<String> {
-    for line in yaml.lines() {
-        if let Some(rest) = line.strip_prefix("name:") {
-            let name = rest.trim().trim_matches('"').trim_matches('\'');
-            if !name.is_empty() {
-                return Some(name.to_string());
-            }
-        }
-    }
-    None
+    let parsed: serde_yaml::Value = serde_yaml::from_str(yaml).ok()?;
+    parsed["name"].as_str().map(|s| s.to_string())
 }
 
 async fn find_unique_name(base: &str, pool: &SqlitePool) -> Result<String, String> {
-    let exists: Option<(String,)> = sqlx::query_as("SELECT id FROM scenarios WHERE name = ?")
-        .bind(base)
-        .fetch_optional(pool)
-        .await
-        .map_err(|e| e.to_string())?;
+    // Fetch all potentially conflicting names in one query
+    let existing: Vec<(String,)> =
+        sqlx::query_as("SELECT name FROM scenarios WHERE name = ? OR name LIKE ?")
+            .bind(base)
+            .bind(format!("{}_%", base))
+            .fetch_all(pool)
+            .await
+            .map_err(|e| e.to_string())?;
 
-    if exists.is_none() {
+    if existing.is_empty() {
+        return Ok(base.to_string());
+    }
+
+    let names: std::collections::HashSet<String> = existing.into_iter().map(|(n,)| n).collect();
+    if !names.contains(base) {
         return Ok(base.to_string());
     }
 
     for i in 2..=100 {
         let candidate = format!("{}_{}", base, i);
-        let exists: Option<(String,)> =
-            sqlx::query_as("SELECT id FROM scenarios WHERE name = ?")
-                .bind(&candidate)
-                .fetch_optional(pool)
-                .await
-                .map_err(|e| e.to_string())?;
-        if exists.is_none() {
+        if !names.contains(&candidate) {
             return Ok(candidate);
         }
     }

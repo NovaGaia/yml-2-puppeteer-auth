@@ -28,7 +28,6 @@ verification:
 export function useScenario() {
   const [scenarios, setScenarios] = useState<Scenario[]>([])
   const [selected, setSelected] = useState<Scenario | null>(null)
-  const [loading, setLoading] = useState(false)
 
   const reload = useCallback(async () => {
     const list = await invoke<Scenario[]>('list_scenarios')
@@ -41,32 +40,28 @@ export function useScenario() {
     const scenario = await invoke<Scenario>('create_scenario', {
       payload: { name: 'Nouveau scénario', yaml_content: DEFAULT_YAML },
     })
-    await reload()
+    setScenarios((prev) => [scenario, ...prev])
     setSelected(scenario)
-  }, [reload])
+  }, [])
 
-  const update = useCallback(async (yaml_content: string) => {
+  const patch = useCallback(async (changes: Partial<Pick<Scenario, 'name' | 'yaml_content'>>) => {
     if (!selected) return
+    const updated = { ...selected, ...changes }
     await invoke('update_scenario', {
-      payload: { id: selected.id, name: selected.name, yaml_content },
+      payload: { id: selected.id, name: updated.name, yaml_content: updated.yaml_content },
     })
-    setSelected((s) => s ? { ...s, yaml_content } : s)
+    setSelected(updated)
+    setScenarios((prev) => prev.map((s) => s.id === updated.id ? { ...s, ...changes } : s))
   }, [selected])
 
-  const rename = useCallback(async (name: string) => {
-    if (!selected) return
-    await invoke('update_scenario', {
-      payload: { id: selected.id, name, yaml_content: selected.yaml_content },
-    })
-    setSelected((s) => s ? { ...s, name } : s)
-    await reload()
-  }, [selected, reload])
+  const update = useCallback((yaml_content: string) => patch({ yaml_content }), [patch])
+  const rename = useCallback((name: string) => patch({ name }), [patch])
 
   const remove = useCallback(async (id: string) => {
     await invoke('delete_scenario', { id })
     if (selected?.id === id) setSelected(null)
-    await reload()
-  }, [selected, reload])
+    setScenarios((prev) => prev.filter((s) => s.id !== id))
+  }, [selected])
 
-  return { scenarios, selected, setSelected, loading, create, update, rename, remove, reload }
+  return { scenarios, selected, setSelected, create, update, rename, remove, reload }
 }
