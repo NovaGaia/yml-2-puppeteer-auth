@@ -27,6 +27,8 @@ pub fn run() {
             commands::scenarios::import_yaml,
             commands::scenarios::confirm_import,
             commands::scenarios::export_yaml,
+            commands::runner::run_scenario,
+            commands::runner::check_node,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
