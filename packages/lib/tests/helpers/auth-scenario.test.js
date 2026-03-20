@@ -61,6 +61,17 @@ describe('AuthScenario', () => {
   })
 
   describe('test()', () => {
+    it('navigates to authentication.url before executing steps', async () => {
+      process.env.LOGIN_VALUE = 'user@example.com'
+      const puppeteer = await import('puppeteer')
+      const scenario = new AuthScenario(path.join(fixturesDir, 'login-simple.yml'))
+      await scenario.test({ headed: false })
+      const browser = await puppeteer.default.launch()
+      const page = await browser.newPage()
+      expect(page.goto).toHaveBeenCalledWith('https://example.com/login', expect.objectContaining({ waitUntil: 'load' }))
+      delete process.env.LOGIN_VALUE
+    })
+
     it('returns { success: true } when auth flow completes', async () => {
       process.env.LOGIN_VALUE = 'user@example.com'
       const scenario = new AuthScenario(path.join(fixturesDir, 'login-simple.yml'))
