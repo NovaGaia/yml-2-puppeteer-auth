@@ -1,0 +1,16 @@
+{
+  "name": "auth-scenario-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "@changesets/cli": "^2.27.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
