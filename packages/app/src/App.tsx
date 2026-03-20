@@ -1,8 +1,9 @@
 import ScenarioList from './components/ScenarioList'
+import YamlEditor from './components/editor/YamlEditor'
 import { useScenario } from './hooks/useScenario'
 
 export default function App() {
-  const { scenarios, selected, setSelected, create, remove } = useScenario()
+  const { scenarios, selected, setSelected, create, update, remove } = useScenario()
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
@@ -15,11 +16,23 @@ export default function App() {
           onDelete={remove}
         />
       </aside>
-      <main style={{ flex: 1, padding: 16, overflow: 'auto' }}>
-        {selected
-          ? <p>Scénario sélectionné : {selected.name}</p>
-          : <p style={{ color: '#999' }}>Sélectionner ou créer un scénario</p>
-        }
+
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {selected ? (
+          <>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #ddd' }}>
+              <strong>{selected.name}</strong>
+            </div>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <YamlEditor
+                value={selected.yaml_content}
+                onChange={update}
+              />
+            </div>
+          </>
+        ) : (
+          <div style={{ padding: 16, color: '#999' }}>Sélectionner ou créer un scénario</div>
+        )}
       </main>
     </div>
   )
