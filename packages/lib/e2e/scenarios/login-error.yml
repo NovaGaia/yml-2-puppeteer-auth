@@ -1,18 +1,19 @@
 name: 'Keycloak - Détection erreur login'
 
-# Ce scénario DOIT échouer : il valide que errorSelector détecte bien
+# Ce scénario DOIT échouer : il valide que errorSelector détecte
 # le message d'erreur Keycloak quand le mot de passe est incorrect.
-# Utiliser avec KC_PASS_WRONG=wrongpassword
+# Après un mauvais mot de passe, Keycloak affiche #input-error AVANT
+# que #otp (la page 2FA) n'apparaisse — errorSelector doit gagner la race.
 
 authentication:
-  url: 'http://localhost:8080/realms/test-auth/protocol/openid-connect/auth?client_id=test-app&redirect_uri=http://localhost:3000/&response_type=code'
+  url: 'http://localhost:8080/realms/test-auth/protocol/openid-connect/auth?client_id=test-app&redirect_uri=http://localhost:8080/realms/test-auth/&response_type=code'
   steps:
     - action: waitForSelector
       selector: '#username'
 
     - action: fill
       selector: '#username'
-      valueEnv: 'KC_USER'
+      valueEnv: 'KC_USER_TOTP'
 
     - action: fill
       selector: '#password'
@@ -22,12 +23,12 @@ authentication:
       selector: '#kc-login'
 
     - action: waitForSelector
-      selector: '#kc-content'
+      selector: '#otp'
       errorSelector: '#input-error'
 
 verification:
   - type: url
-    contains: 'localhost:3000'
+    contains: 'code='
     required: true
 
 options:

@@ -8,6 +8,18 @@
   "resetPasswordAllowed": false,
   "editUsernameAllowed": false,
   "bruteForceProtected": false,
+  "requiredCredentials": ["password"],
+  "requiredActions": [
+    {
+      "alias": "VERIFY_PROFILE",
+      "name": "Verify Profile",
+      "providerId": "verify-profile-action-factory",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 90,
+      "config": {}
+    }
+  ],
   "users": [
     {
       "username": "testuser",
@@ -41,8 +53,8 @@
         {
           "type": "otp",
           "userLabel": "auth-scenario-e2e",
-          "secretData": "{\"value\":\"JBSWY3DPEHPK3PXP\",\"digits\":6,\"counter\":0,\"period\":30,\"algorithm\":\"HmacSHA1\"}",
-          "credentialData": "{\"subType\":\"totp\",\"digits\":6,\"counter\":0,\"period\":30,\"algorithm\":\"HmacSHA1\"}"
+          "secretData": "{\"value\":\"JBSWY3DPEHPK3PXP\"}",
+          "credentialData": "{\"subType\":\"totp\",\"digits\":6,\"counter\":0,\"period\":30,\"algorithm\":\"HmacSHA1\",\"secretEncoding\":\"Base32\"}"
         }
       ],
       "requiredActions": [],
@@ -54,61 +66,10 @@
       "clientId": "test-app",
       "enabled": true,
       "publicClient": true,
-      "redirectUris": ["http://localhost:3000/*"],
-      "webOrigins": ["http://localhost:3000"],
+      "redirectUris": ["http://localhost:8080/*", "http://localhost:8080/realms/test-auth/*"],
+      "webOrigins": ["http://localhost:8080"],
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true
-    }
-  ],
-  "browserFlow": "browser",
-  "authenticationFlows": [
-    {
-      "alias": "browser",
-      "description": "Browser flow without OTP requirement",
-      "providerId": "basic-flow",
-      "topLevel": true,
-      "builtIn": false,
-      "authenticationExecutions": [
-        {
-          "authenticator": "auth-cookie",
-          "requirement": "ALTERNATIVE",
-          "priority": 10,
-          "autheticatorFlow": false
-        },
-        {
-          "authenticator": "auth-spnego",
-          "requirement": "DISABLED",
-          "priority": 20,
-          "autheticatorFlow": false
-        },
-        {
-          "authenticator": "identity-provider-redirector",
-          "requirement": "ALTERNATIVE",
-          "priority": 25,
-          "autheticatorFlow": false
-        },
-        {
-          "requirement": "ALTERNATIVE",
-          "priority": 30,
-          "flowAlias": "forms",
-          "autheticatorFlow": true
-        }
-      ]
-    },
-    {
-      "alias": "forms",
-      "description": "Username/password form",
-      "providerId": "basic-flow",
-      "topLevel": false,
-      "builtIn": false,
-      "authenticationExecutions": [
-        {
-          "authenticator": "auth-username-password-form",
-          "requirement": "REQUIRED",
-          "priority": 10,
-          "autheticatorFlow": false
-        }
-      ]
     }
   ]
 }
