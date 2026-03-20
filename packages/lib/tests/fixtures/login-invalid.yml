@@ -1,0 +1,6 @@
+# login-invalid.yml — manque name et url
+authentication:
+  steps:
+    - action: fill
+      valueEnv: "LOGIN_VALUE"
+      # selector manquant
