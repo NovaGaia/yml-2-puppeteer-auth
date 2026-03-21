@@ -1,0 +1,17 @@
+{
+  "name": "custom-puppeteer-script-with-lib-example",
+  "version": "1.0.0",
+  "description": "Example using yml-2-puppeteer-auth for authentication",
+  "main": "index.cjs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "yml-2-puppeteer-auth": "^0.1.0"
+  }
+}

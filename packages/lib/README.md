@@ -232,6 +232,15 @@ lighthouse https://example.com --puppeteer-script=./my-auth-script.cjs
 
 ---
 
+## Lighthouse integration examples
+
+See [`examples/lighthouse/`](./examples/lighthouse/) for complete integration examples with `lighthouse-plugin-ecoindex`:
+
+- [`with-lib/`](./examples/lighthouse/with-lib/) — using `yml-2-puppeteer-auth` (recommended)
+- [`without-lib/`](./examples/lighthouse/without-lib/) — vanilla Puppeteer for reference
+
+---
+
 ## Examples
 
 See [`examples/`](./examples/) for ready-to-use scenarios:

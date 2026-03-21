@@ -1,0 +1,41 @@
+name: "Okta authentication (one step)"
+
+# One-step flow: email and password fields are both visible on the same page.
+# Equivalent to oneStepLogin() in the without-lib example.
+
+authentication:
+  url: "https://YOUR_OKTA_DOMAIN/login"   # AUTH_URL
+  steps:
+    - action: waitForSelector
+      selector: "form[method=post]"
+      timeout: 30000
+
+    - action: waitForSelector
+      selector: "input[type=text]"
+      timeout: 10000
+
+    - action: waitForSelector
+      selector: "input[type=password]"
+      timeout: 10000
+
+    - action: fill
+      selector: "input[type=text]"
+      valueEnv: "LOGIN_VALUE"
+
+    - action: fill
+      selector: "input[type=password]"
+      valueEnv: "PASS_VALUE"
+
+    - action: click
+      selector: '[type="submit"]'
+
+    - action: wait
+      duration: 30000   # Hard wait — Okta + target app need time to process the login
+
+verification:
+  - type: localStorage
+    key: "okta-token-storage"
+    required: true
+
+options:
+  timeout: 90000

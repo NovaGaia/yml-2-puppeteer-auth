@@ -1,0 +1,34 @@
+name: "WordPress authentication"
+
+authentication:
+  url: "https://YOUR_SITE/wp-login.php"   # AUTH_URL
+  steps:
+    - action: waitForSelector
+      selector: "#user_login"
+      timeout: 10000
+
+    - action: fill
+      selector: "#user_login"
+      valueEnv: "LOGIN_VALUE"
+
+    - action: fill
+      selector: "#user_pass"
+      valueEnv: "PASS_VALUE"
+
+    - action: click
+      selector: '[type="submit"]'
+
+    - action: waitForNavigation
+      timeout: 15000
+
+verification:
+  - type: cookie
+    name: "wordpress_logged_in_"
+    required: true
+
+  - type: title
+    contains: "Tableau de bord"
+    required: false
+
+options:
+  timeout: 30000
