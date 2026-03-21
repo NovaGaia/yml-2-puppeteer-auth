@@ -1,18 +1,18 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "auth-scenario",
+  "productName": "YML 2 Puppeteer",
   "version": "0.1.0",
-  "identifier": "com.auth-scenario.app",
+  "identifier": "com.yml2puppeteerauth.app",
   "build": {
     "beforeDevCommand": "pnpm vite:dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm vite build",
+    "beforeBuildCommand": "pnpm --filter yml-2-puppeteer-auth bundle && pnpm vite build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "auth-scenario",
+        "title": "YML 2 Puppeteer",
         "width": 1200,
         "height": 800
       }
@@ -24,8 +24,14 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
     "resources": {
-      "../../lib/src/": "lib/src/"
+      "../../lib/dist/cli.bundle.cjs": "cli.bundle.cjs"
     }
   }
 }

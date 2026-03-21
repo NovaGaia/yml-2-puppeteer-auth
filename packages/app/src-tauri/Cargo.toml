@@ -1,5 +1,5 @@
 [package]
-name = "auth-scenario-app"
+name = "yml-2-puppeteer-auth-app"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,6 +12,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio", "migrate"] }

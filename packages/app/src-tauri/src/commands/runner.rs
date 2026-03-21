@@ -7,6 +7,61 @@ use uuid::Uuid;
 const NODE_NOT_FOUND: &str =
     "Node.js introuvable. Installez Node.js depuis https://nodejs.org";
 
+fn find_node() -> Option<std::path::PathBuf> {
+    // 1. Chercher dans le PATH courant
+    if let Ok(output) = Command::new("which").arg("node").output() {
+        if output.status.success() {
+            let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !path.is_empty() {
+                return Some(std::path::PathBuf::from(path));
+            }
+        }
+    }
+
+    // 2. Emplacements standards (Homebrew, pkg installer, NVM, Volta, fnm, asdf)
+    let home = std::env::var("HOME").unwrap_or_default();
+    let candidates = [
+        "/usr/local/bin/node".to_string(),
+        "/opt/homebrew/bin/node".to_string(),
+        "/usr/bin/node".to_string(),
+        format!("{}/.volta/bin/node", home),
+        format!("{}/.fnm/aliases/default/bin/node", home),
+    ];
+
+    for path in &candidates {
+        let p = std::path::Path::new(path);
+        if p.exists() {
+            return Some(p.to_path_buf());
+        }
+    }
+
+    // 3. NVM : chercher la version active dans ~/.nvm/alias/default
+    let nvm_alias = format!("{}/.nvm/alias/default", home);
+    if let Ok(version) = std::fs::read_to_string(&nvm_alias) {
+        let version = version.trim();
+        let node = format!("{}/.nvm/versions/node/{}/bin/node", home, version);
+        let p = std::path::Path::new(&node);
+        if p.exists() {
+            return Some(p.to_path_buf());
+        }
+    }
+
+    // 4. NVM : prendre la version la plus récente disponible
+    let nvm_versions = format!("{}/.nvm/versions/node", home);
+    if let Ok(entries) = std::fs::read_dir(&nvm_versions) {
+        let mut versions: Vec<_> = entries.flatten().collect();
+        versions.sort_by(|a, b| b.file_name().cmp(&a.file_name()));
+        for entry in versions {
+            let node = entry.path().join("bin/node");
+            if node.exists() {
+                return Some(node);
+            }
+        }
+    }
+
+    None
+}
+
 #[derive(Debug, serde::Deserialize)]
 pub struct RunPayload {
     // Design note: we pass yaml_content directly (not scenario_id) so that
@@ -23,10 +78,11 @@ pub async fn run_scenario(
 ) -> Result<bool, String> {
     let cli_path = resolve_cli_path(&app)?;
 
-    let tmp_path = std::env::temp_dir().join(format!("auth-scenario-{}.yml", Uuid::new_v4()));
+    let tmp_path = std::env::temp_dir().join(format!("yml-2-puppeteer-auth-{}.yml", Uuid::new_v4()));
     std::fs::write(&tmp_path, &payload.yaml_content).map_err(|e| e.to_string())?;
 
-    let mut cmd = Command::new("node");
+    let node = find_node().ok_or_else(|| NODE_NOT_FOUND.to_string())?;
+    let mut cmd = Command::new(&node);
     cmd.arg(&cli_path)
         .arg("test")
         .arg(tmp_path.to_str().unwrap())
@@ -77,7 +133,8 @@ pub async fn run_scenario(
 
 #[tauri::command]
 pub fn check_node() -> Result<String, String> {
-    let output = Command::new("node")
+    let node = find_node().ok_or_else(|| NODE_NOT_FOUND.to_string())?;
+    let output = Command::new(&node)
         .arg("--version")
         .output()
         .map_err(|_| NODE_NOT_FOUND.to_string())?;
@@ -105,17 +162,17 @@ fn resolve_cli_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
         return Err(format!("cli.js not found in dev at {:?}", cli));
     }
 
-    // In production: from bundled resources (bundle.resources: lib/src/ → lib/src/)
+    // In production: from bundled resources (cli.bundle.cjs — all deps inlined)
     let resource_dir = app
         .path()
         .resource_dir()
         .map_err(|e| e.to_string())?;
-    let cli = resource_dir.join("lib/src/cli/cli.js");
+    let cli = resource_dir.join("cli.bundle.cjs");
     if cli.exists() {
         return Ok(cli);
     }
 
-    Err("cli.js not found in bundled resources. Please reinstall the application.".to_string())
+    Err("cli.bundle.cjs not found in bundled resources. Please reinstall the application.".to_string())
 }
 
 #[cfg(test)]

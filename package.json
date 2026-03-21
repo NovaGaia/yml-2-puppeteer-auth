@@ -1,5 +1,5 @@
 {
-  "name": "auth-scenario-monorepo",
+  "name": "yml-2-puppeteer-auth-monorepo",
   "private": true,
   "scripts": {
     "build": "turbo run build",
