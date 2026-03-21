@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { yamlToSteps, patchYamlSteps } from './useStepSync'
+import { yamlToSteps, patchYamlSteps, yamlToUrl, patchYamlUrl } from './useStepSync'
 
 // ─── yamlToSteps ──────────────────────────────────────────────────────────────
 
@@ -151,5 +151,44 @@ verification:
     const original = `name: "Preserved Name"\nauthentication:\n  url: "https://x.com"\n  steps: []\n`
     const result = patchYamlSteps(original, [])
     expect(result).toContain('Preserved Name')
+  })
+})
+
+// ─── yamlToUrl ────────────────────────────────────────────────────────────────
+
+describe('yamlToUrl', () => {
+  it('extrait l\'url d\'authentification', () => {
+    const yaml = `authentication:\n  url: "https://example.com/login"\n  steps: []\n`
+    expect(yamlToUrl(yaml)).toBe('https://example.com/login')
+  })
+
+  it('retourne une chaîne vide si url est absent', () => {
+    const yaml = `authentication:\n  steps: []\n`
+    expect(yamlToUrl(yaml)).toBe('')
+  })
+
+  it('retourne une chaîne vide si le YAML est vide', () => {
+    expect(yamlToUrl('')).toBe('')
+  })
+
+  it('retourne une chaîne vide si authentication est absent', () => {
+    expect(yamlToUrl(`name: "test"\n`)).toBe('')
+  })
+})
+
+// ─── patchYamlUrl ─────────────────────────────────────────────────────────────
+
+describe('patchYamlUrl', () => {
+  it('remplace l\'url et préserve le reste', () => {
+    const original = `name: "test"\nauthentication:\n  url: "https://old.com"\n  steps: []\n`
+    const result = patchYamlUrl(original, 'https://new.com/login')
+    expect(yamlToUrl(result)).toBe('https://new.com/login')
+    expect(result).toContain('test')
+  })
+
+  it('crée authentication.url si absent', () => {
+    const original = `name: "test"\n`
+    const result = patchYamlUrl(original, 'https://example.com')
+    expect(yamlToUrl(result)).toBe('https://example.com')
   })
 })

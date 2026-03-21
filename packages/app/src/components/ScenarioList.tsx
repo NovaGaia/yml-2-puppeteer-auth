@@ -6,7 +6,7 @@ interface Props {
   selected: Scenario | null
   onSelect: (s: Scenario) => void
   onCreate: () => void
-  onRename: (name: string) => void
+  onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
 }
 
@@ -21,7 +21,7 @@ export default function ScenarioList({ scenarios, selected, onSelect, onCreate, 
   }
 
   function commitEdit() {
-    if (editingName.trim()) onRename(editingName.trim())
+    if (editingId && editingName.trim()) onRename(editingId, editingName.trim())
     setEditingId(null)
   }
 

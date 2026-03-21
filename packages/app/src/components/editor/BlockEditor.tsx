@@ -37,9 +37,11 @@ function SortableStepBlock({
 interface Props {
   steps: Step[]
   onStepsChange: (steps: Step[]) => void
+  url: string
+  onUrlChange: (url: string) => void
 }
 
-export default function BlockEditor({ steps, onStepsChange }: Props) {
+export default function BlockEditor({ steps, onStepsChange, url, onUrlChange }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -57,8 +59,23 @@ export default function BlockEditor({ steps, onStepsChange }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb', fontSize: 12, color: '#6b7280' }}>
-        {steps.length} step{steps.length !== 1 ? 's' : ''} — authentication
+      <div style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb' }}>
+        <label style={{ display: 'block', fontSize: 11, color: '#6b7280', marginBottom: 4 }}>URL d'authentification</label>
+        <input
+          type="url"
+          value={url}
+          onChange={(e) => onUrlChange(e.target.value)}
+          placeholder="https://example.com/login"
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            fontSize: 12, padding: '4px 8px',
+            border: '1px solid #d1d5db', borderRadius: 4,
+            fontFamily: 'inherit',
+          }}
+        />
+        <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>
+          {steps.length} step{steps.length !== 1 ? 's' : ''}
+        </div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>

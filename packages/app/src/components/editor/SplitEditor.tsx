@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function SplitEditor({ value, onChange }: Props) {
-  const { steps, onStepsChange, onYamlEdit, localYaml, yamlError } = useStepSync({
+  const { steps, onStepsChange, url, onUrlChange, onYamlEdit, localYaml, yamlError } = useStepSync({
     yaml: value,
     onYamlChange: onChange,
   })
@@ -21,7 +21,7 @@ export default function SplitEditor({ value, onChange }: Props) {
         borderRight: '1px solid #e5e7eb',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
-        <BlockEditor steps={steps} onStepsChange={onStepsChange} />
+        <BlockEditor steps={steps} onStepsChange={onStepsChange} url={url} onUrlChange={onUrlChange} />
       </div>
 
       {/* Right pane — YAML editor */}

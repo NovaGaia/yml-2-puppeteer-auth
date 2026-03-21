@@ -1,6 +1,17 @@
 import { invoke } from '@tauri-apps/api/core'
+import { load, dump } from 'js-yaml'
 import { useCallback, useEffect, useState } from 'react'
 import type { Scenario } from '../types'
+
+function patchYamlName(yaml: string, name: string): string {
+  try {
+    const doc = (load(yaml) as Record<string, unknown> | null) ?? {}
+    doc['name'] = name
+    return dump(doc, { lineWidth: -1 })
+  } catch {
+    return yaml
+  }
+}
 
 const DEFAULT_YAML = `name: "Nouveau scénario"
 
@@ -55,7 +66,18 @@ export function useScenario() {
   }, [selected])
 
   const update = useCallback((yaml_content: string) => patch({ yaml_content }), [patch])
-  const rename = useCallback((name: string) => patch({ name }), [patch])
+
+  const rename = useCallback(async (id: string, name: string) => {
+    const scenario = scenarios.find((s) => s.id === id)
+    if (!scenario) return
+    const yaml_content = patchYamlName(scenario.yaml_content, name)
+    const updated = { ...scenario, name, yaml_content }
+    await invoke('update_scenario', {
+      payload: { id, name, yaml_content },
+    })
+    if (selected?.id === id) setSelected(updated)
+    setScenarios((prev) => prev.map((s) => s.id === id ? updated : s))
+  }, [scenarios, selected])
 
   const remove = useCallback(async (id: string) => {
     await invoke('delete_scenario', { id })

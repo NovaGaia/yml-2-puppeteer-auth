@@ -42,6 +42,40 @@ export function patchYamlSteps(yaml: string, steps: Step[]): string {
   }
 }
 
+/**
+ * Extract authentication.url from a YAML string.
+ * Returns '' if absent or invalid.
+ */
+export function yamlToUrl(yaml: string): string {
+  if (!yaml.trim()) return ''
+  try {
+    const doc = load(yaml) as Record<string, unknown> | null
+    if (!doc || typeof doc !== 'object') return ''
+    const auth = doc['authentication'] as Record<string, unknown> | undefined
+    if (!auth || typeof auth !== 'object') return ''
+    return typeof auth['url'] === 'string' ? auth['url'] : ''
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * Replace authentication.url in the existing YAML string.
+ * Preserves all other sections.
+ */
+export function patchYamlUrl(yaml: string, url: string): string {
+  try {
+    const doc = (load(yaml) as Record<string, unknown> | null) ?? {}
+    if (!doc['authentication'] || typeof doc['authentication'] !== 'object') {
+      doc['authentication'] = {}
+    }
+    ;(doc['authentication'] as Record<string, unknown>)['url'] = url
+    return dump(doc, { lineWidth: -1 })
+  } catch {
+    return dump({ authentication: { url } }, { lineWidth: -1 })
+  }
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 interface UseStepSyncOptions {
@@ -53,6 +87,8 @@ interface UseStepSyncOptions {
 interface UseStepSyncResult {
   steps: Step[]
   onStepsChange: (steps: Step[]) => void
+  url: string
+  onUrlChange: (url: string) => void
   onYamlEdit: (newYaml: string) => void
   localYaml: string
   yamlError: boolean
@@ -64,6 +100,7 @@ export function useStepSync({
   debounceMs = 300,
 }: UseStepSyncOptions): UseStepSyncResult {
   const [steps, setSteps] = useState<Step[]>(() => yamlToSteps(yaml) ?? [])
+  const [url, setUrl] = useState(() => yamlToUrl(yaml))
   const [localYaml, setLocalYaml] = useState(yaml)
   const [yamlError, setYamlError] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -74,6 +111,7 @@ export function useStepSync({
   useEffect(() => {
     const parsed = yamlToSteps(yaml)
     setSteps(parsed ?? [])
+    setUrl(yamlToUrl(yaml))
     setLocalYaml(yaml)
     setYamlError(false)
   }, [yaml])
@@ -83,6 +121,16 @@ export function useStepSync({
     (newSteps: Step[]) => {
       setSteps(newSteps)
       const newYaml = patchYamlSteps(localYamlRef.current, newSteps)
+      setLocalYaml(newYaml)
+      onYamlChange(newYaml)
+    },
+    [onYamlChange],
+  )
+
+  const onUrlChange = useCallback(
+    (newUrl: string) => {
+      setUrl(newUrl)
+      const newYaml = patchYamlUrl(localYamlRef.current, newUrl)
       setLocalYaml(newYaml)
       onYamlChange(newYaml)
     },
@@ -101,6 +149,7 @@ export function useStepSync({
         } else {
           setYamlError(false)
           setSteps(parsed)
+          setUrl(yamlToUrl(newYaml))
         }
         onYamlChange(newYaml)
       }, debounceMs)
@@ -108,5 +157,5 @@ export function useStepSync({
     [onYamlChange, debounceMs],
   )
 
-  return { steps, onStepsChange, onYamlEdit, localYaml, yamlError }
+  return { steps, onStepsChange, url, onUrlChange, onYamlEdit, localYaml, yamlError }
 }
