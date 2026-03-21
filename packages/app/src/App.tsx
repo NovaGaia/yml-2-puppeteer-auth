@@ -7,7 +7,7 @@ import ImportExportBar from './components/ImportExportBar'
 import { useScenario } from './hooks/useScenario'
 
 export default function App() {
-  const { scenarios, selected, setSelected, create, update, remove, reload } = useScenario()
+  const { scenarios, selected, setSelected, create, update, rename, remove, reload } = useScenario()
   const [tab, setTab] = useState<'editor' | 'runner'>('editor')
   const [nodeError, setNodeError] = useState<string | null>(null)
 
@@ -38,6 +38,7 @@ export default function App() {
             selected={selected}
             onSelect={setSelected}
             onCreate={create}
+            onRename={rename}
             onDelete={remove}
           />
         </aside>
