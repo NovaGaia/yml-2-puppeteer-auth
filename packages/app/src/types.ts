@@ -61,3 +61,52 @@ export const ACTION_TYPES: ActionType[] = [
   'assertNotPresent',
   'wait',
 ]
+
+// ─── Verification types ────────────────────────────────────────────────────────
+
+export interface CookieVerification {
+  type: 'cookie'
+  name: string
+  required?: boolean
+}
+
+export interface LocalStorageVerification {
+  type: 'localStorage'
+  key: string
+  required?: boolean
+}
+
+export interface UrlVerification {
+  type: 'url'
+  contains: string
+  required?: boolean
+}
+
+export interface SelectorVerification {
+  type: 'selector'
+  selector: string
+  required?: boolean
+}
+
+export interface TitleVerification {
+  type: 'title'
+  contains: string
+  required?: boolean
+}
+
+export type Verification =
+  | CookieVerification
+  | LocalStorageVerification
+  | UrlVerification
+  | SelectorVerification
+  | TitleVerification
+
+export type VerificationType = Verification['type']
+
+export const VERIFICATION_TYPES: VerificationType[] = [
+  'cookie',
+  'localStorage',
+  'url',
+  'selector',
+  'title',
+]

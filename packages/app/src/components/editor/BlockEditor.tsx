@@ -15,8 +15,9 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { Step } from '../../types'
+import type { Step, Verification } from '../../types'
 import StepBlock from './StepBlock'
+import VerificationBlock from './VerificationBlock'
 
 function SortableStepBlock({
   id, step, index, onChange, onDelete,
@@ -39,9 +40,11 @@ interface Props {
   onStepsChange: (steps: Step[]) => void
   url: string
   onUrlChange: (url: string) => void
+  verification: Verification[]
+  onVerificationChange: (verification: Verification[]) => void
 }
 
-export default function BlockEditor({ steps, onStepsChange, url, onUrlChange }: Props) {
+export default function BlockEditor({ steps, onStepsChange, url, onUrlChange, verification, onVerificationChange }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -108,6 +111,42 @@ export default function BlockEditor({ steps, onStepsChange, url, onUrlChange }: 
             borderRadius: 6, cursor: 'pointer', fontSize: 13, color: '#4b5563',
           }}>
           + Ajouter un step
+        </button>
+      </div>
+
+      {/* ── Verification section ── */}
+      <div style={{ borderTop: '2px solid #e5e7eb', padding: '8px 12px 4px' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Vérification
+        </div>
+      </div>
+
+      <div style={{ overflowY: 'auto', padding: '0 12px 8px' }}>
+        {verification.map((v, i) => (
+          <VerificationBlock
+            key={i}
+            verification={v}
+            index={i}
+            onChange={(updated) => onVerificationChange(verification.map((item, j) => j === i ? updated : item))}
+            onDelete={() => onVerificationChange(verification.filter((_, j) => j !== i))}
+          />
+        ))}
+        {verification.length === 0 && (
+          <div style={{ color: '#9ca3af', fontSize: 12, textAlign: 'center', marginTop: 8, marginBottom: 4 }}>
+            Aucune vérification configurée
+          </div>
+        )}
+      </div>
+
+      <div style={{ padding: '4px 12px 12px' }}>
+        <button
+          onClick={() => onVerificationChange([...verification, { type: 'url', contains: '', required: true }])}
+          style={{
+            width: '100%', padding: '6px 0',
+            background: '#f3f4f6', border: '1px dashed #d1d5db',
+            borderRadius: 6, cursor: 'pointer', fontSize: 13, color: '#4b5563',
+          }}>
+          + Ajouter une vérification
         </button>
       </div>
     </div>

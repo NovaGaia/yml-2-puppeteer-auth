@@ -1,6 +1,6 @@
 import { load, dump } from 'js-yaml'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Step } from '../types'
+import type { Step, Verification } from '../types'
 
 // ─── Pure functions (exported for testing) ────────────────────────────────────
 
@@ -60,6 +60,42 @@ export function yamlToUrl(yaml: string): string {
 }
 
 /**
+ * Parse a YAML string and extract the verification array.
+ * Returns null if the YAML is syntactically invalid or empty.
+ * Returns [] if verification is absent.
+ */
+export function yamlToVerification(yaml: string): Verification[] | null {
+  if (!yaml.trim()) return null
+  try {
+    const doc = load(yaml) as Record<string, unknown> | null
+    if (!doc || typeof doc !== 'object') return null
+    const verif = doc['verification']
+    if (!Array.isArray(verif)) return []
+    return verif as Verification[]
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Replace the verification array in the existing YAML string.
+ * Preserves all other sections.
+ */
+export function patchYamlVerification(yaml: string, verification: Verification[]): string {
+  try {
+    const doc = (load(yaml) as Record<string, unknown> | null) ?? {}
+    if (verification.length === 0) {
+      delete doc['verification']
+    } else {
+      doc['verification'] = verification
+    }
+    return dump(doc, { lineWidth: -1 })
+  } catch {
+    return dump({ verification }, { lineWidth: -1 })
+  }
+}
+
+/**
  * Replace authentication.url in the existing YAML string.
  * Preserves all other sections.
  */
@@ -89,6 +125,8 @@ interface UseStepSyncResult {
   onStepsChange: (steps: Step[]) => void
   url: string
   onUrlChange: (url: string) => void
+  verification: Verification[]
+  onVerificationChange: (verification: Verification[]) => void
   onYamlEdit: (newYaml: string) => void
   localYaml: string
   yamlError: boolean
@@ -101,6 +139,7 @@ export function useStepSync({
 }: UseStepSyncOptions): UseStepSyncResult {
   const [steps, setSteps] = useState<Step[]>(() => yamlToSteps(yaml) ?? [])
   const [url, setUrl] = useState(() => yamlToUrl(yaml))
+  const [verification, setVerification] = useState<Verification[]>(() => yamlToVerification(yaml) ?? [])
   const [localYaml, setLocalYaml] = useState(yaml)
   const [yamlError, setYamlError] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -112,6 +151,7 @@ export function useStepSync({
     const parsed = yamlToSteps(yaml)
     setSteps(parsed ?? [])
     setUrl(yamlToUrl(yaml))
+    setVerification(yamlToVerification(yaml) ?? [])
     setLocalYaml(yaml)
     setYamlError(false)
   }, [yaml])
@@ -137,6 +177,16 @@ export function useStepSync({
     [onYamlChange],
   )
 
+  const onVerificationChange = useCallback(
+    (newVerification: Verification[]) => {
+      setVerification(newVerification)
+      const newYaml = patchYamlVerification(localYamlRef.current, newVerification)
+      setLocalYaml(newYaml)
+      onYamlChange(newYaml)
+    },
+    [onYamlChange],
+  )
+
   // YAML → blocks: debounced, blocks unchanged if syntax invalid
   const onYamlEdit = useCallback(
     (newYaml: string) => {
@@ -150,6 +200,7 @@ export function useStepSync({
           setYamlError(false)
           setSteps(parsed)
           setUrl(yamlToUrl(newYaml))
+          setVerification(yamlToVerification(newYaml) ?? [])
         }
         onYamlChange(newYaml)
       }, debounceMs)
@@ -157,5 +208,5 @@ export function useStepSync({
     [onYamlChange, debounceMs],
   )
 
-  return { steps, onStepsChange, url, onUrlChange, onYamlEdit, localYaml, yamlError }
+  return { steps, onStepsChange, url, onUrlChange, verification, onVerificationChange, onYamlEdit, localYaml, yamlError }
 }
