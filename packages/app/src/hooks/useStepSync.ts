@@ -1,5 +1,5 @@
 import { load, dump } from 'js-yaml'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Step } from '../types'
 
 // ─── Pure functions (exported for testing) ────────────────────────────────────
