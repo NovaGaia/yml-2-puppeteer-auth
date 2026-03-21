@@ -5,3 +5,10 @@ dist/
 .env
 *.env
 .worktrees/
+
+# Rust build artifacts
+target/
+packages/app/src-tauri/target/
+
+# macOS
+.DS_Store
