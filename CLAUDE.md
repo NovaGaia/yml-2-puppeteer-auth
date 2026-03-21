@@ -119,7 +119,7 @@ The script receives `{ page, session, flow, position, urls }` from Lighthouse pr
 ```
 /
 ├── packages/
-│   ├── lib/    — Node.js library (published to npm as auth-scenario)
+│   ├── lib/    — Node.js library (published to npm as yml-2-puppeteer-auth)
 │   └── app/    — Tauri desktop app with React frontend
 ├── pnpm-workspace.yaml
 ├── turbo.json

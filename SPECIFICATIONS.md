@@ -299,16 +299,16 @@ Avant d'intégrer un YAML dans un pipeline Lighthouse, il doit pouvoir être tes
 
 ```bash
 # Valider la structure du YAML sans lancer Puppeteer
-npx auth-scenario validate config.yml
+npx yml-2-puppeteer-auth validate config.yml
 
 # Tester le flow complet avec Puppeteer (navigateur headless)
-npx auth-scenario test config.yml
+npx yml-2-puppeteer-auth test config.yml
 
 # Tester avec navigateur visible (pour déboguer)
-npx auth-scenario test config.yml --headed
+npx yml-2-puppeteer-auth test config.yml --headed
 
 # Tester avec logs détaillés
-npx auth-scenario test config.yml --debug
+npx yml-2-puppeteer-auth test config.yml --debug
 ```
 
 ### Comportement de `validate`
@@ -353,7 +353,7 @@ Les credentials sont passés via les mêmes variables d'environnement qu'en prod
 export LOGIN_VALUE="user@example.com"
 export PASS_VALUE="secret"
 export TOTP_SECRET="4qwasw2ycmiwdjifwge25wojkzhpvdb7"
-npx auth-scenario test config.yml --headed
+npx yml-2-puppeteer-auth test config.yml --headed
 ```
 
 Ou via un fichier `.env` local (non commité) :
@@ -366,7 +366,7 @@ TOTP_SECRET=4qwasw2ycmiwdjifwge25wojkzhpvdb7
 ```
 
 ```bash
-npx dotenv auth-scenario test config.yml
+npx dotenv yml-2-puppeteer-auth test config.yml
 ```
 
 ---

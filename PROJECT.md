@@ -75,7 +75,7 @@ Lighthouse audit
 
 ### Code structure
 ```
-auth-scenario/
+yml-2-puppeteer-auth/
 ├── src/
 │   ├── core/
 │   │   ├── config-loader.js    # Charge YAML/JSON, résout les env vars

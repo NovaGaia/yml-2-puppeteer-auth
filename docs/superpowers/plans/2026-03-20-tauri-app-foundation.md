@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a functional Tauri v2 desktop app where developers can create, edit, and test `auth-scenario` YAML configs via a YAML editor and integrated runner.
+**Goal:** Build a functional Tauri v2 desktop app where developers can create, edit, and test `yml-2-puppeteer-auth` YAML configs via a YAML editor and integrated runner.
 
 **Architecture:** Tauri v2 (Rust backend) + React/Vite frontend. Rust handles SQLite (sqlx), file I/O, and Node.js subprocess spawning. React renders the UI and holds credentials in session state only. Communication via Tauri commands and events.
 
@@ -72,7 +72,7 @@ packages/app/
 
 ```json
 {
-  "name": "auth-scenario-app",
+  "name": "yml-2-puppeteer-auth-app",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -114,7 +114,7 @@ packages/app/
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>auth-scenario</title>
+    <title>yml-2-puppeteer-auth</title>
   </head>
   <body>
     <div id="root"></div>
@@ -200,7 +200,7 @@ export default function App() {
 
 ```toml
 [package]
-name = "auth-scenario-app"
+name = "yml-2-puppeteer-auth-app"
 version = "0.1.0"
 edition = "2021"
 
@@ -235,9 +235,9 @@ opt-level = "s"
 ```json
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "auth-scenario",
+  "productName": "yml-2-puppeteer-auth",
   "version": "0.1.0",
-  "identifier": "com.auth-scenario.app",
+  "identifier": "com.yml-2-puppeteer-auth.app",
   "build": {
     "beforeDevCommand": "pnpm vite:dev",
     "devUrl": "http://localhost:1420",
@@ -247,7 +247,7 @@ opt-level = "s"
   "app": {
     "windows": [
       {
-        "title": "auth-scenario",
+        "title": "yml-2-puppeteer-auth",
         "width": 1200,
         "height": 800
       }
@@ -1339,7 +1339,7 @@ pub async fn run_scenario(
     let cli_path = resolve_cli_path(&app)?;
 
     // 2. Écrire le YAML temporaire
-    let tmp_path = std::env::temp_dir().join(format!("auth-scenario-{}.yml", Uuid::new_v4()));
+    let tmp_path = std::env::temp_dir().join(format!("yml-2-puppeteer-auth-{}.yml", Uuid::new_v4()));
     std::fs::write(&tmp_path, &payload.yaml_content).map_err(|e| e.to_string())?;
 
     // 3. Construire la commande

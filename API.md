@@ -9,16 +9,16 @@
 ### Installation
 
 ```bash
-pnpm add auth-scenario
+pnpm add yml-2-puppeteer-auth
 ```
 
 ### Import
 
 ```javascript
-import { AuthScenario } from 'auth-scenario'
-// ou CommonJS
-const { AuthScenario } = require('auth-scenario')
+import { AuthScenario } from 'yml-2-puppeteer-auth'
 ```
+
+> Le package est **ES modules uniquement** (`"type": "module"`). CommonJS `require()` n'est pas supporté.
 
 ---
 
@@ -136,7 +136,7 @@ import {
   ValidationError,      // Config invalide (structure)
   InterpreterError,     // Erreur pendant l'exécution Puppeteer
   VerificationError,    // Vérification post-auth échouée
-} from 'auth-scenario/errors'
+} from 'yml-2-puppeteer-auth/errors'
 ```
 
 **Exemple** :
@@ -161,14 +161,14 @@ try {
 ### `validate`
 
 ```bash
-npx auth-scenario validate <config>
+npx yml-2-puppeteer-auth validate <config>
 ```
 
 Vérifie la structure du YAML et la présence des variables d'environnement.
 Ne lance pas Puppeteer.
 
 ```bash
-npx auth-scenario validate scenarios/my-app.yml
+npx yml-2-puppeteer-auth validate scenarios/my-app.yml
 # ✓ YAML valid
 # ✓ Environment variables present (LOGIN_VALUE, PASS_VALUE)
 ```
@@ -178,7 +178,7 @@ npx auth-scenario validate scenarios/my-app.yml
 ### `test`
 
 ```bash
-npx auth-scenario test <config> [options]
+npx yml-2-puppeteer-auth test <config> [options]
 ```
 
 **Options** :
@@ -194,7 +194,7 @@ export LOGIN_VALUE="user@example.com"
 export PASS_VALUE="secret"
 export TOTP_SECRET="4qwasw2ycmiwdjifwge25wojkzhpvdb7"  # si 2FA
 
-npx auth-scenario test scenarios/my-app.yml --headed --debug
+npx yml-2-puppeteer-auth test scenarios/my-app.yml --headed --debug
 ```
 
 Ou via `.env` :
@@ -203,15 +203,16 @@ Ou via `.env` :
 LOGIN_VALUE=user@example.com
 PASS_VALUE=secret
 
-node --env-file=.env ./node_modules/.bin/auth-scenario test scenarios/my-app.yml
+node --env-file=.env ./node_modules/.bin/yml-2-puppeteer-auth test scenarios/my-app.yml
 ```
 
 ---
 
 ## 5. Intégration Lighthouse
 
-Le fichier `scripts/puppeteer-generic.cjs` est le point d'entrée pour Lighthouse.
-Il lit le YAML depuis la variable `AUTH_CONFIG`.
+### Pattern A — script bundlé (le plus simple)
+
+`scripts/puppeteer-generic.cjs` est le point d'entrée prêt à l'emploi. Il lit le YAML depuis `AUTH_CONFIG`.
 
 ```bash
 export AUTH_CONFIG="./scenarios/my-app.yml"
@@ -219,7 +220,45 @@ export LOGIN_VALUE="user@example.com"
 export PASS_VALUE="secret"
 
 lighthouse https://example.com/dashboard \
-  --puppeteer-script=./node_modules/auth-scenario/scripts/puppeteer-generic.cjs
+  --puppeteer-script=./node_modules/yml-2-puppeteer-auth/scripts/puppeteer-generic.cjs
+```
+
+### Pattern B — script personnalisé via l'export `lighthouse`
+
+Pour un script avec logique custom, utiliser l'export dédié :
+
+```javascript
+// my-auth-script.cjs
+'use strict'
+
+module.exports = async (props) => {
+  const { authenticateWithPage } = await import('yml-2-puppeteer-auth/lighthouse')
+
+  await authenticateWithPage(props.page, process.env.AUTH_CONFIG, {
+    timeout: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : undefined,
+    debug: process.env.DEBUG === 'true',
+  })
+}
+```
+
+```bash
+lighthouse https://example.com/dashboard --puppeteer-script=./my-auth-script.cjs
+```
+
+### `authenticateWithPage(page, configPath, options)`
+
+Exécute un scénario YAML avec un `page` Puppeteer existant (fourni par Lighthouse — aucun lancement de navigateur).
+
+**Paramètres** :
+- `page` — objet `Page` Puppeteer provenant de `props.page`
+- `configPath` (string) — chemin vers le fichier YAML
+- `options` (object, optionnel) :
+  - `timeout` (number) — override du timeout global (ms)
+  - `debug` (boolean) — logs détaillés
+
+**Exemple d'import** :
+```javascript
+import { authenticateWithPage } from 'yml-2-puppeteer-auth/lighthouse'
 ```
 
 ---

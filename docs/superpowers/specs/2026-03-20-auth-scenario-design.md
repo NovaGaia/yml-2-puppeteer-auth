@@ -21,7 +21,7 @@ L'objectif est de pouvoir décrire un scénario d'authentification en YAML décl
 sans écrire de JavaScript.
 
 Le projet produit deux artefacts :
-1. **Une librairie npm** (`auth-scenario`) — interprète les YAML et exécute les authentifications avec Puppeteer
+1. **Une librairie npm** (`yml-2-puppeteer-auth`) — interprète les YAML et exécute les authentifications avec Puppeteer
 2. **Une application desktop Tauri** — UI pour créer les YAML et tester les scénarios
 
 ---
@@ -51,7 +51,7 @@ Le projet produit deux artefacts :
 ```
 /
 ├── packages/
-│   ├── lib/                    # Librairie npm (auth-scenario)
+│   ├── lib/                    # Librairie npm (yml-2-puppeteer-auth)
 │   └── app/                    # Application Tauri
 ├── pnpm-workspace.yaml
 ├── turbo.json
@@ -106,7 +106,7 @@ packages/lib/
 │   ├── login-two-steps.yml
 │   ├── login-totp.yml
 │   └── login-with-error-handling.yml
-└── package.json                # name: "auth-scenario"
+└── package.json                # name: "yml-2-puppeteer-auth"
 ```
 
 ### Format YAML — schéma canonique
@@ -189,7 +189,7 @@ texte de l'élément. Si `selector` gagne → succès, poursuite des steps.
 ### API publique
 
 ```javascript
-import { AuthScenario } from 'auth-scenario'
+import { AuthScenario } from 'yml-2-puppeteer-auth'
 
 const scenario = new AuthScenario('./auth.yml')
 
@@ -209,8 +209,8 @@ const result = await scenario.test({
 ### CLI
 
 ```bash
-npx auth-scenario validate config.yml
-npx auth-scenario test config.yml --headed --debug --screenshots ./debug
+npx yml-2-puppeteer-auth validate config.yml
+npx yml-2-puppeteer-auth test config.yml --headed --debug --screenshots ./debug
 ```
 
 Les credentials viennent des variables d'environnement — jamais en argument CLI
@@ -218,7 +218,7 @@ Les credentials viennent des variables d'environnement — jamais en argument CL
 
 Chargement d'un fichier `.env` en local :
 ```bash
-node --env-file=.env ./node_modules/.bin/auth-scenario test config.yml --headed
+node --env-file=.env ./node_modules/.bin/yml-2-puppeteer-auth test config.yml --headed
 ```
 
 ### Intégration Lighthouse
@@ -229,7 +229,7 @@ export LOGIN_VALUE="user@example.com"
 export PASS_VALUE="secret"
 
 lighthouse https://example.com \
-  --puppeteer-script=./node_modules/auth-scenario/scripts/puppeteer-generic.cjs
+  --puppeteer-script=./node_modules/yml-2-puppeteer-auth/scripts/puppeteer-generic.cjs
 ```
 
 ---
@@ -287,7 +287,7 @@ packages/app/
    - Exécute un script qui reporte la version dans `packages/app/src-tauri/tauri.conf.json`
    - Met à jour les CHANGELOGs
 3. À la merge de la Release PR, deux jobs GitHub Actions se lancent en parallèle :
-   - **`publish-npm`** : `pnpm changeset publish` → publie `auth-scenario` sur npm
+   - **`publish-npm`** : `pnpm changeset publish` → publie `yml-2-puppeteer-auth` sur npm
    - **`build-tauri`** : build cross-platform + publication en GitHub Release
 
 ### Build Tauri (matrix)
@@ -316,8 +316,8 @@ Action utilisée : `tauri-apps/tauri-action`
 ## Versioning
 
 Changesets gère les versions de façon indépendante :
-- `auth-scenario` (lib) → semver, publié sur npm
-- `auth-scenario-app` (app) → semver, version synchronisée dans `src-tauri/tauri.conf.json`
+- `yml-2-puppeteer-auth` (lib) → semver, publié sur npm
+- `yml-2-puppeteer-auth-app` (app) → semver, version synchronisée dans `src-tauri/tauri.conf.json`
   via un script post-version
 
 ---

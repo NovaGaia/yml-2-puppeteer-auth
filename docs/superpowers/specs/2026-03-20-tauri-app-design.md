@@ -1,14 +1,14 @@
 ---
-title: auth-scenario — Application desktop Tauri
+title: yml-2-puppeteer-auth — Application desktop Tauri
 date: 2026-03-20
 status: draft
 ---
 
-# auth-scenario — Application desktop Tauri
+# yml-2-puppeteer-auth — Application desktop Tauri
 
 ## Contexte
 
-La librairie `auth-scenario` permet de décrire des flows d'authentification en YAML et de les exécuter avec Puppeteer. L'application desktop complète cet outil avec un éditeur visuel et un runner intégré, pour créer et tester des scénarios sans écrire de YAML à la main.
+La librairie `yml-2-puppeteer-auth` permet de décrire des flows d'authentification en YAML et de les exécuter avec Puppeteer. L'application desktop complète cet outil avec un éditeur visuel et un runner intégré, pour créer et tester des scénarios sans écrire de YAML à la main.
 
 ---
 
@@ -183,7 +183,7 @@ Split-view bidirectionnel : blocs drag & drop à gauche, YAML à droite.
 Au clic "Lancer", Rust reçoit `(scenario_id, credentials_map, headed: bool)` :
 
 1. Lit `yaml_content` depuis SQLite
-2. Écrit un fichier YAML temporaire dans `std::env::temp_dir()` (ex. `/tmp/auth-scenario-<uuid>.yml`)
+2. Écrit un fichier YAML temporaire dans `std::env::temp_dir()` (ex. `/tmp/yml-2-puppeteer-auth-<uuid>.yml`)
 3. Construit la commande :
    ```
    node <chemin_absolu_cli> test <yaml_tmp> [--headed]
@@ -219,7 +219,7 @@ tauri invoke("run_scenario", { credentials_map, headed })
     ↓
 Rust : env vars injectées dans subprocess (env isolé)
     ↓
-Node.js subprocess (auth-scenario lib)
+Node.js subprocess (yml-2-puppeteer-auth lib)
     ↓
 Résultat streamé via tauri::emit → UI
 ```

@@ -21,8 +21,8 @@ ConfigLoader → Validator → Interpreter (runtime)
 ```
 /
 ├── packages/
-│   ├── lib/          # Librairie npm (auth-scenario)
-│   └── app/          # Application Tauri (à venir)
+│   ├── lib/          # Librairie npm (yml-2-puppeteer-auth)
+│   └── app/          # Application Tauri (éditeur visuel + runner)
 ├── pnpm-workspace.yaml
 ├── turbo.json
 └── .changeset/
@@ -53,9 +53,11 @@ packages/lib/
 │   ├── cli/
 │   │   └── cli.js              # CLI : validate + test
 │   ├── errors.js               # Classes d'erreur typées
-│   └── index.js                # API publique (AuthScenario)
+│   ├── index.js                # API publique (AuthScenario) — lance son propre navigateur
+│   └── lighthouse.js           # API Lighthouse (authenticateWithPage) — page fournie en paramètre
 ├── scripts/
-│   └── puppeteer-generic.cjs   # Point d'entrée Lighthouse (CommonJS)
+│   ├── puppeteer-generic.cjs       # Point d'entrée Lighthouse bundlé (CommonJS)
+│   └── puppeteer-with-package.cjs  # Template à copier pour scripts custom
 ├── examples/                   # Exemples YAML
 ├── e2e/                        # Tests e2e Keycloak (Docker)
 └── tests/                      # Tests unitaires (Vitest)
@@ -76,21 +78,40 @@ packages/lib/
 
 **`verification.js`** — vérifie les conditions post-auth : `url`, `cookie`, `localStorage`, `selector`, `title`. Supporte `verificationMode: all | any`.
 
-**`puppeteer-generic.cjs`** — point d'entrée CommonJS pour Lighthouse `--puppeteer-script`. Lit `AUTH_CONFIG` depuis les variables d'environnement, instancie l'`Interpreter`, et rend le contrôle à Lighthouse une fois authentifié.
+**`lighthouse.js`** — API publique pour Lighthouse : `authenticateWithPage(page, configPath, options)`. Accepte un `page` Puppeteer existant (fourni par Lighthouse), sans lancer de navigateur. Export accessible via `yml-2-puppeteer-auth/lighthouse`.
+
+**`puppeteer-generic.cjs`** — point d'entrée CommonJS prêt à l'emploi pour Lighthouse `--puppeteer-script`. Lit `AUTH_CONFIG` depuis les variables d'environnement, délègue à `authenticateWithPage`.
+
+**`puppeteer-with-package.cjs`** — template CJS à copier dans son projet pour créer un script Lighthouse personnalisé utilisant les imports package (pas de chemins relatifs).
+
+**Dépendance navigateur** — la lib utilise `puppeteer-core` (sans Chromium embarqué). Pour `AuthScenario.test()`, Chrome est détecté automatiquement via `findChrome()` dans les emplacements standards (`/Applications/Google Chrome.app`, Homebrew, `/usr/bin/chromium`, etc.). Pour Lighthouse, le navigateur est fourni par Lighthouse lui-même.
 
 ---
 
 ## Flux d'exécution
 
+**Avec `AuthScenario.test()` (CLI / Node.js API) :**
 ```
 1. Charger le YAML (ConfigLoader.load)
 2. Valider la structure (Validator.validate)
 3. Vérifier les env vars (ConfigLoader.checkEnvVars)
-4. Lancer Puppeteer (browser + page)
-5. Naviguer vers authentication.url (page.goto)
-6. Exécuter chaque step (Interpreter.executeStep)
-7. Vérifier le résultat (Interpreter.verify)
-8. Fermer le browser
+4. Détecter Chrome (findChrome)
+5. Lancer Puppeteer via puppeteer-core (browser + page)
+6. Naviguer vers authentication.url (page.goto)
+7. Exécuter chaque step (Interpreter.executeStep)
+8. Vérifier le résultat (Interpreter.verify)
+9. Fermer le browser
+```
+
+**Avec `authenticateWithPage()` (Lighthouse) :**
+```
+1. Charger le YAML (ConfigLoader.load)
+2. Valider la structure (Validator.validate)
+3. Vérifier les env vars (ConfigLoader.checkEnvVars)
+4. Naviguer vers authentication.url (page.goto)  ← page fournie par Lighthouse
+5. Exécuter chaque step (Interpreter.executeStep)
+6. Vérifier le résultat (Interpreter.verify)
+   → Lighthouse reprend le contrôle
 ```
 
 ---

@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Mettre en place le monorepo et implémenter la librairie `auth-scenario` publiable sur npm — interprétation runtime de YAML pour authentifier avec Puppeteer, avec CLI (`validate`, `test`) et intégration Lighthouse.
+**Goal:** Mettre en place le monorepo et implémenter la librairie `yml-2-puppeteer-auth` publiable sur npm — interprétation runtime de YAML pour authentifier avec Puppeteer, avec CLI (`validate`, `test`) et intégration Lighthouse.
 
-**Architecture:** Un seul interpreter générique lit un YAML à runtime et exécute des steps Puppeteer atomiques (pas de génération de code, pas de modes prédéfinis). Le schéma YAML canonique est dans `docs/superpowers/specs/2026-03-20-auth-scenario-design.md`.
+**Architecture:** Un seul interpreter générique lit un YAML à runtime et exécute des steps Puppeteer atomiques (pas de génération de code, pas de modes prédéfinis). Le schéma YAML canonique est dans `docs/superpowers/specs/2026-03-20-yml-2-puppeteer-auth-design.md`.
 
 **Tech Stack:** pnpm workspaces, Turborepo, Changesets, Vitest, js-yaml, otplib, puppeteer (peer dep), commander
 
@@ -28,7 +28,7 @@
 │       └── release.yml                       # publish npm sur Release PR merge
 └── packages/
     └── lib/
-        ├── package.json                      # name: "auth-scenario"
+        ├── package.json                      # name: "yml-2-puppeteer-auth"
         ├── vitest.config.js
         ├── src/
         │   ├── index.js                      # export public AuthScenario
@@ -52,7 +52,7 @@
         │   │   └── interpreter.test.js
         │   ├── helpers/
         │   │   ├── verification.test.js
-        │   │   └── auth-scenario.test.js     # tests de la classe publique AuthScenario
+        │   │   └── yml-2-puppeteer-auth.test.js     # tests de la classe publique AuthScenario
         │   └── fixtures/
         │       ├── login-simple.yml
         │       ├── login-invalid.yml
@@ -99,7 +99,7 @@ packages:
 
 ```json
 {
-  "name": "auth-scenario-monorepo",
+  "name": "yml-2-puppeteer-auth-monorepo",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -167,7 +167,7 @@ git commit -m "chore: initialize monorepo with pnpm workspaces and turborepo"
 
 ```json
 {
-  "name": "auth-scenario",
+  "name": "yml-2-puppeteer-auth",
   "version": "0.1.0",
   "type": "module",
   "description": "Runtime YAML interpreter for Puppeteer authentication flows",
@@ -177,7 +177,7 @@ git commit -m "chore: initialize monorepo with pnpm workspaces and turborepo"
     "./errors": "./src/errors.js"
   },
   "bin": {
-    "auth-scenario": "./src/cli/cli.js"
+    "yml-2-puppeteer-auth": "./src/cli/cli.js"
   },
   "files": [
     "src",
@@ -1215,12 +1215,12 @@ git commit -m "feat(lib): add Interpreter with all step actions, TOTP support, a
 
 **Files:**
 - Create: `packages/lib/src/index.js`
-- Create: `packages/lib/tests/helpers/auth-scenario.test.js`
+- Create: `packages/lib/tests/helpers/yml-2-puppeteer-auth.test.js`
 
 - [ ] **Step 1 : Écrire les tests**
 
 ```javascript
-// packages/lib/tests/helpers/auth-scenario.test.js
+// packages/lib/tests/helpers/yml-2-puppeteer-auth.test.js
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -1430,7 +1430,7 @@ Résultat attendu : PASS (44 tests total)
 - [ ] **Step 6 : Commit**
 
 ```bash
-git add packages/lib/src/index.js packages/lib/tests/helpers/auth-scenario.test.js packages/lib/tests/fixtures/login-invalid.yml
+git add packages/lib/src/index.js packages/lib/tests/helpers/yml-2-puppeteer-auth.test.js packages/lib/tests/fixtures/login-invalid.yml
 git commit -m "feat(lib): add AuthScenario public API with validate() and test()"
 ```
 
@@ -1471,16 +1471,16 @@ module.exports = async (props) => {
   const debug = process.env.DEBUG === 'true'
 
   if (debug) {
-    page.on('console', msg => console.log('[auth-scenario]', msg.text()))
-    console.log(`[auth-scenario] config: ${configPath}`)
-    console.log(`[auth-scenario] steps: ${raw.authentication.steps.length}`)
+    page.on('console', msg => console.log('[yml-2-puppeteer-auth]', msg.text()))
+    console.log(`[yml-2-puppeteer-auth] config: ${configPath}`)
+    console.log(`[yml-2-puppeteer-auth] steps: ${raw.authentication.steps.length}`)
   }
 
   const interpreter = new Interpreter(raw, page, { timeout })
   await interpreter.authenticate()
   await interpreter.verify()
 
-  if (debug) console.log('[auth-scenario] Authentication successful')
+  if (debug) console.log('[yml-2-puppeteer-auth] Authentication successful')
 }
 ```
 
@@ -1517,7 +1517,7 @@ import { ConfigLoader } from '../core/config-loader.js'
 import { Validator } from '../core/validator.js'
 
 program
-  .name('auth-scenario')
+  .name('yml-2-puppeteer-auth')
   .description('Runtime YAML interpreter for Puppeteer authentication flows')
   .version('0.1.0')
 

@@ -31,7 +31,7 @@ test — vérifier que ça passe en headless
 ### `validate` — vérifier la structure
 
 ```bash
-npx auth-scenario validate scenarios/my-app.yml
+npx yml-2-puppeteer-auth validate scenarios/my-app.yml
 ```
 
 Vérifie :
@@ -65,7 +65,7 @@ Les credentials viennent des variables d'environnement — jamais en argument CL
 export LOGIN_VALUE="user@example.com"
 export PASS_VALUE="secret"
 
-npx auth-scenario test scenarios/my-app.yml
+npx yml-2-puppeteer-auth test scenarios/my-app.yml
 ```
 
 **Options** :
@@ -82,7 +82,7 @@ npx auth-scenario test scenarios/my-app.yml
 ### Tester avec navigateur visible
 
 ```bash
-npx auth-scenario test scenarios/my-app.yml --headed
+npx yml-2-puppeteer-auth test scenarios/my-app.yml --headed
 ```
 
 Indispensable pour déboguer : on voit exactement ce que Puppeteer fait.
@@ -92,7 +92,7 @@ Indispensable pour déboguer : on voit exactement ce que Puppeteer fait.
 ### Tester avec logs complets
 
 ```bash
-npx auth-scenario test scenarios/my-app.yml --headed --debug --screenshots ./debug
+npx yml-2-puppeteer-auth test scenarios/my-app.yml --headed --debug --screenshots ./debug
 ```
 
 **Sortie** :
@@ -142,12 +142,12 @@ TOTP_SECRET=4qwasw2ycmiwdjifwge25wojkzhpvdb7
 
 Charger avec Node.js 20+ :
 ```bash
-node --env-file=.env ./node_modules/.bin/auth-scenario test scenarios/my-app.yml --headed
+node --env-file=.env ./node_modules/.bin/yml-2-puppeteer-auth test scenarios/my-app.yml --headed
 ```
 
 Ou avec `dotenv-cli` :
 ```bash
-npx dotenv -e .env -- auth-scenario test scenarios/my-app.yml --headed
+npx dotenv -e .env -- yml-2-puppeteer-auth test scenarios/my-app.yml --headed
 ```
 
 Ajouter `.env` au `.gitignore` :
@@ -241,13 +241,13 @@ EOF
 # 2. Valider la structure
 export LOGIN_VALUE="user@example.com"
 export PASS_VALUE="secret"
-npx auth-scenario validate scenarios/my-app.yml
+npx yml-2-puppeteer-auth validate scenarios/my-app.yml
 
 # 3. Tester avec navigateur visible
-npx auth-scenario test scenarios/my-app.yml --headed --debug
+npx yml-2-puppeteer-auth test scenarios/my-app.yml --headed --debug
 
 # 4. Tester en headless (comme en prod)
-npx auth-scenario test scenarios/my-app.yml
+npx yml-2-puppeteer-auth test scenarios/my-app.yml
 
 # 5. Utiliser avec Lighthouse
 export AUTH_CONFIG="./scenarios/my-app.yml"
@@ -259,7 +259,7 @@ lighthouse https://app.example.com \
 
 ## 7. Tests e2e Keycloak (développement de la lib)
 
-Pour contribuer à `auth-scenario`, une suite de tests e2e tourne contre un Keycloak local (Docker). Elle couvre les cas critiques sans dépendre d'un service externe.
+Pour contribuer à `yml-2-puppeteer-auth`, une suite de tests e2e tourne contre un Keycloak local (Docker). Elle couvre les cas critiques sans dépendre d'un service externe.
 
 **Prérequis** : Docker ou OrbStack
 
@@ -283,10 +283,10 @@ Les credentials Keycloak sont dans `e2e/.env.e2e.example` — copier en `e2e/.en
 
 | Tâche | Commande |
 |-------|----------|
-| Vérifier la structure YAML | `npx auth-scenario validate config.yml` |
-| Tester avec navigateur visible | `npx auth-scenario test config.yml --headed` |
-| Tester avec logs complets | `npx auth-scenario test config.yml --headed --debug` |
-| Tester en headless | `npx auth-scenario test config.yml` |
+| Vérifier la structure YAML | `npx yml-2-puppeteer-auth validate config.yml` |
+| Tester avec navigateur visible | `npx yml-2-puppeteer-auth test config.yml --headed` |
+| Tester avec logs complets | `npx yml-2-puppeteer-auth test config.yml --headed --debug` |
+| Tester en headless | `npx yml-2-puppeteer-auth test config.yml` |
 | Utiliser avec Lighthouse | `AUTH_CONFIG=config.yml lighthouse ... --puppeteer-script=...` |
 | Tests unitaires (lib) | `cd packages/lib && pnpm test` |
 | Tests e2e Keycloak (lib) | `cd packages/lib && pnpm e2e:start && pnpm e2e:login` |

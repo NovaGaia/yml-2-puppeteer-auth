@@ -1,13 +1,22 @@
-# auth-scenario
+# YML-2-Puppeteer-Auth Monorepo
 
-Monorepo for `auth-scenario` — a YAML-driven Puppeteer authentication library and desktop app.
+<center style="margin: 2rem 0;">
+<div>
+
+![project icon](./icons-src/v3/icon-pupp-2-yml.png)
+
+</div>
+
+</center>
+
+Monorepo for `yml-2-puppeteer-auth` — a YAML-driven Puppeteer authentication library and desktop app.
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
+| Package                          | Description                                                     |
+| -------------------------------- | --------------------------------------------------------------- |
 | [`packages/lib`](./packages/lib) | Node.js library — interprets YAML auth scenarios with Puppeteer |
-| `packages/app` | Tauri desktop app — visual editor and test runner (coming soon) |
+| `packages/app`                   | Tauri desktop app — visual editor and test runner (coming soon) |
 
 ## Getting started
 

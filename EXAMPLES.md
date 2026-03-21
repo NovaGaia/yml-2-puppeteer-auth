@@ -47,7 +47,7 @@ export LOGIN_VALUE="user@example.com"
 export PASS_VALUE="secret"
 
 lighthouse https://example.com \
-  --puppeteer-script=./scripts/puppeteer-generic.cjs
+  --puppeteer-script=./node_modules/yml-2-puppeteer-auth/scripts/puppeteer-generic.cjs
 ```
 
 ---
@@ -252,12 +252,13 @@ export LOGIN_VALUE="user@example.com"
 export PASS_VALUE="secret"
 
 # 4. Valider la structure
-npx auth-scenario validate mon-site.yml
+npx yml-2-puppeteer-auth validate mon-site.yml
 
 # 5. Tester avec navigateur visible
-npx auth-scenario test mon-site.yml --headed --debug
+npx yml-2-puppeteer-auth test mon-site.yml --headed --debug
 
 # 6. Utiliser avec Lighthouse
 export AUTH_CONFIG="./mon-site.yml"
-lighthouse https://example.com --puppeteer-script=./scripts/puppeteer-generic.cjs
+lighthouse https://example.com \
+  --puppeteer-script=./node_modules/yml-2-puppeteer-auth/scripts/puppeteer-generic.cjs
 ```
