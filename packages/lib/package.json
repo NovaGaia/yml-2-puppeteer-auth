@@ -1,15 +1,16 @@
 {
-  "name": "auth-scenario",
+  "name": "yml-2-puppeteer-auth",
   "version": "0.1.0",
   "type": "module",
   "description": "Runtime YAML interpreter for Puppeteer authentication flows",
   "main": "./src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./errors": "./src/errors.js"
+    "./errors": "./src/errors.js",
+    "./lighthouse": "./src/lighthouse.js"
   },
   "bin": {
-    "auth-scenario": "./src/cli/cli.js"
+    "yml-2-puppeteer-auth": "./src/cli/cli.js"
   },
   "files": [
     "src",
@@ -24,22 +25,23 @@
     "e2e:login": "node --env-file=e2e/.env.e2e src/cli/cli.js test e2e/scenarios/login-simple.yml",
     "e2e:totp": "node --env-file=e2e/.env.e2e src/cli/cli.js test e2e/scenarios/login-totp.yml",
     "e2e:error": "node --env-file=e2e/.env.e2e src/cli/cli.js test e2e/scenarios/login-error.yml",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "bundle": "esbuild src/cli/cli.js --bundle --platform=node --format=cjs --outfile=dist/cli.bundle.cjs"
   },
   "dependencies": {
     "commander": "^12.0.0",
     "js-yaml": "^4.1.0",
-    "otplib": "^12.0.1"
-  },
-  "peerDependencies": {
-    "puppeteer": ">=21.0.0"
+    "otplib": "^12.0.1",
+    "puppeteer-core": "^24.40.0"
   },
   "peerDependenciesMeta": {
-    "puppeteer": { "optional": true }
+    "puppeteer": {
+      "optional": true
+    }
   },
   "devDependencies": {
-    "vitest": "^2.0.0",
-    "puppeteer": "^23.0.0"
+    "esbuild": "^0.27.4",
+    "vitest": "^2.0.0"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -1,5 +1,22 @@
 // packages/lib/src/index.js
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
+import { existsSync } from 'fs'
+
+function findChrome() {
+  const candidates = [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
+    '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+  ]
+  for (const p of candidates) {
+    if (existsSync(p)) return p
+  }
+  throw new Error('Chrome introuvable. Installez Google Chrome depuis https://www.google.com/chrome')
+}
 import { ConfigLoader } from './core/config-loader.js'
 import { Validator } from './core/validator.js'
 import { Interpreter } from './core/interpreter.js'
@@ -30,7 +47,7 @@ export class AuthScenario {
     if (!validationResult.valid) throw new ValidationError(validationResult.errors)
     ConfigLoader.checkEnvVars(raw)
 
-    const browser = await puppeteer.launch({ headless: !headed })
+    const browser = await puppeteer.launch({ headless: !headed, executablePath: findChrome() })
     const page = await browser.newPage()
     if (debug) page.on('console', msg => console.log('[browser]', msg.text()))
 

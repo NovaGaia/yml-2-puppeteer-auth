@@ -1,16 +1,18 @@
-# auth-scenario
+# yml-2-puppeteer-auth
 
 Runtime YAML interpreter for Puppeteer authentication flows. Describe any login form in YAML — no JavaScript required.
 
 ```bash
-npm install auth-scenario
+npm install yml-2-puppeteer-auth
 ```
+
+> **Requires**: Node.js ≥ 20, Google Chrome (or Chromium) installed on the system. The package uses `puppeteer-core` — no Chromium is downloaded on install.
 
 ---
 
 ## How it works
 
-Write a YAML file describing your authentication steps. `auth-scenario` reads it at runtime and executes each step with Puppeteer. No code generation, no build step.
+Write a YAML file describing your authentication steps. `yml-2-puppeteer-auth` reads it at runtime and executes each step with Puppeteer. No code generation, no build step.
 
 ```
 YAML config → ConfigLoader → Validator → Interpreter → Puppeteer
@@ -56,8 +58,8 @@ options:
 export LOGIN_VALUE="user@example.com"
 export PASS_VALUE="secret"
 
-npx auth-scenario validate auth.yml
-npx auth-scenario test auth.yml --headed
+npx yml-2-puppeteer-auth validate auth.yml
+npx yml-2-puppeteer-auth test auth.yml --headed
 ```
 
 ---
@@ -132,7 +134,7 @@ Credentials are **never** stored in YAML. Always use `valueEnv` pointing to an e
 
 ```bash
 # Load from a .env file
-node --env-file=.env ./node_modules/.bin/auth-scenario test auth.yml
+node --env-file=.env ./node_modules/.bin/yml-2-puppeteer-auth test auth.yml
 ```
 
 | Variable | Description |
@@ -148,15 +150,15 @@ node --env-file=.env ./node_modules/.bin/auth-scenario test auth.yml
 
 ```bash
 # Validate YAML without launching a browser
-npx auth-scenario validate auth.yml
+npx yml-2-puppeteer-auth validate auth.yml
 
 # Run the full auth flow
-npx auth-scenario test auth.yml
+npx yml-2-puppeteer-auth test auth.yml
 
 # Options
-npx auth-scenario test auth.yml --headed              # show browser
-npx auth-scenario test auth.yml --debug               # log browser console
-npx auth-scenario test auth.yml --screenshots ./debug # save screenshots on failure
+npx yml-2-puppeteer-auth test auth.yml --headed              # show browser
+npx yml-2-puppeteer-auth test auth.yml --debug               # log browser console
+npx yml-2-puppeteer-auth test auth.yml --screenshots ./debug # save screenshots on failure
 ```
 
 ---
@@ -164,7 +166,7 @@ npx auth-scenario test auth.yml --screenshots ./debug # save screenshots on fail
 ## Node.js API
 
 ```javascript
-import { AuthScenario } from 'auth-scenario'
+import { AuthScenario } from 'yml-2-puppeteer-auth'
 
 const scenario = new AuthScenario('./auth.yml')
 
@@ -185,14 +187,48 @@ const result = await scenario.test({
 
 ## Lighthouse integration
 
+`yml-2-puppeteer-auth` provides a ready-to-use Puppeteer script for Lighthouse. Lighthouse calls this script with a `{ page }` prop — no browser launch, no extra setup.
+
+### Using the bundled script (simplest)
+
 ```bash
 export AUTH_CONFIG="./auth.yml"
 export LOGIN_VALUE="user@example.com"
 export PASS_VALUE="secret"
 
 lighthouse https://example.com \
-  --puppeteer-script=./node_modules/auth-scenario/scripts/puppeteer-generic.cjs
+  --puppeteer-script=./node_modules/yml-2-puppeteer-auth/scripts/puppeteer-generic.cjs
 ```
+
+### Writing your own script (custom logic)
+
+Copy `scripts/puppeteer-with-package.cjs` from the package into your project, or create one from scratch using the `lighthouse` export:
+
+```javascript
+// my-auth-script.cjs
+'use strict'
+
+module.exports = async (props) => {
+  const { authenticateWithPage } = await import('yml-2-puppeteer-auth/lighthouse')
+
+  await authenticateWithPage(props.page, process.env.AUTH_CONFIG, {
+    timeout: process.env.TIMEOUT ? parseInt(process.env.TIMEOUT) : undefined,
+    debug: process.env.DEBUG === 'true',
+  })
+}
+```
+
+```bash
+lighthouse https://example.com --puppeteer-script=./my-auth-script.cjs
+```
+
+### Environment variables for Lighthouse
+
+| Variable | Description |
+|----------|-------------|
+| `AUTH_CONFIG` | Path to YAML config file (required) |
+| `DEBUG` | Enable verbose logging (`true\|false`) |
+| `TIMEOUT` | Override global timeout (ms) |
 
 ---
 

@@ -1,8 +1,8 @@
 ---
-"auth-scenario": minor
+"yml-2-puppeteer-auth": minor
 ---
 
-Initial implementation of the `auth-scenario` library.
+Initial implementation of the `yml-2-puppeteer-auth` library.
 
 **Core features:**
 
@@ -22,8 +22,8 @@ Initial implementation of the `auth-scenario` library.
 
 **CLI:**
 
-- `auth-scenario validate config.yml`
-- `auth-scenario test config.yml --headed --debug --screenshots ./debug`
+- `yml-2-puppeteer-auth validate config.yml`
+- `yml-2-puppeteer-auth test config.yml --headed --debug --screenshots ./debug`
 
 **Lighthouse integration:**
 
