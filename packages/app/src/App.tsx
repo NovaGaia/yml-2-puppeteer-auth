@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { useEffect, useState } from 'react'
 import ScenarioList from './components/ScenarioList'
-import YamlEditor from './components/editor/YamlEditor'
+import SplitEditor from './components/editor/SplitEditor'
 import RunnerPanel from './components/runner/RunnerPanel'
 import ImportExportBar from './components/ImportExportBar'
 import { useScenario } from './hooks/useScenario'
@@ -61,14 +61,14 @@ export default function App() {
                       fontWeight: tab === t ? 600 : 400,
                     }}
                   >
-                    {t === 'editor' ? 'YAML' : 'Runner'}
+                    {t === 'editor' ? 'Éditeur' : 'Runner'}
                   </button>
                 ))}
               </div>
 
               <div style={{ flex: 1, overflow: 'hidden' }}>
                 {tab === 'editor' ? (
-                  <YamlEditor value={selected.yaml_content} onChange={update} />
+                  <SplitEditor value={selected.yaml_content} onChange={update} />
                 ) : (
                   <RunnerPanel scenario={selected} />
                 )}
