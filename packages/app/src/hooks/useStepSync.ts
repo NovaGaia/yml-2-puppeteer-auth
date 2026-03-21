@@ -67,18 +67,16 @@ export function useStepSync({
   const [localYaml, setLocalYaml] = useState(yaml)
   const [yamlError, setYamlError] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const lastYamlProp = useRef(yaml)
   const localYamlRef = useRef(localYaml)
   localYamlRef.current = localYaml
 
   // When parent yaml prop changes (scenario switch), reset local state
-  if (yaml !== lastYamlProp.current) {
-    lastYamlProp.current = yaml
+  useEffect(() => {
     const parsed = yamlToSteps(yaml)
     setSteps(parsed ?? [])
     setLocalYaml(yaml)
     setYamlError(false)
-  }
+  }, [yaml])
 
   // Blocks → YAML: immediate, always valid
   const onStepsChange = useCallback(
