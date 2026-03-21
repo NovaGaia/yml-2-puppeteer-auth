@@ -1,6 +1,6 @@
 import CodeMirror from '@uiw/react-codemirror'
 import { yaml } from '@codemirror/lang-yaml'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const YAML_EXTENSIONS = [yaml()]
 
@@ -12,17 +12,26 @@ interface Props {
 
 export default function YamlEditor({ value, onChange, debounceMs = 300 }: Props) {
   const [local, setLocal] = useState(value)
+  const isExternalUpdate = useRef(false)
 
   // Sync when the prop changes (selecting a different scenario)
-  useEffect(() => { setLocal(value) }, [value])
+  useEffect(() => {
+    isExternalUpdate.current = true
+    setLocal(value)
+  }, [value])
 
   const handleChange = useCallback((val: string) => {
     setLocal(val)
   }, [])
 
-  // Debounce: call onChange only after debounceMs ms of inactivity
+  // Debounce: call onChange only after debounceMs ms of user inactivity
+  // Do NOT fire when local changed because of an external value update
   useEffect(() => {
     if (local === value) return
+    if (isExternalUpdate.current) {
+      isExternalUpdate.current = false
+      return
+    }
     const timer = setTimeout(() => onChange(local), debounceMs)
     return () => clearTimeout(timer)
   }, [local, value, onChange, debounceMs])
