@@ -66,12 +66,13 @@ export default function App() {
                 ))}
               </div>
 
-              <div style={{ flex: 1, overflow: 'hidden' }}>
-                {tab === 'editor' ? (
+              <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+                <div style={{ display: tab === 'editor' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
                   <SplitEditor value={selected.yaml_content} onChange={update} />
-                ) : (
+                </div>
+                <div style={{ display: tab === 'runner' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
                   <RunnerPanel scenario={selected} />
-                )}
+                </div>
               </div>
             </>
           ) : (
