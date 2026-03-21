@@ -12,3 +12,7 @@ packages/app/src-tauri/target/
 
 # macOS
 .DS_Store
+
+# Claude Code / Superpowers (local tooling)
+.superpowers/
+.claude/
