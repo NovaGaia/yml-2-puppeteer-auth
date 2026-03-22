@@ -1,6 +1,6 @@
 {
   "name": "yml-2-puppeteer-auth",
-  "version": "0.1.0",
+  "version": "0.2.0-rc.0",
   "type": "module",
   "description": "Runtime YAML interpreter for Puppeteer authentication flows",
   "main": "./src/index.js",

@@ -1,5 +1,9 @@
 # yml-2-puppeteer-auth
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/NovaGaia/yml-2-puppeteer-auth/main/packages/app/icons-src/v3/icon-pupp-2-yml.png" alt="yml-2-puppeteer-auth" width="128" />
+</p>
+
 Runtime YAML interpreter for Puppeteer authentication flows. Describe any login form in YAML — no JavaScript required.
 
 ```bash

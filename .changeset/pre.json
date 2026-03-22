@@ -1,0 +1,12 @@
+{
+  "mode": "pre",
+  "tag": "rc",
+  "initialVersions": {
+    "yml-2-puppeteer-auth-app": "0.1.0",
+    "yml-2-puppeteer-auth": "0.1.0"
+  },
+  "changesets": [
+    "initial-release",
+    "lighthouse-api-and-doc-update"
+  ]
+}
