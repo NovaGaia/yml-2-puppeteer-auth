@@ -15,7 +15,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { Step, Verification } from '../../types'
+import type { Step, Verification, Options } from '../../types'
 import StepBlock from './StepBlock'
 import VerificationBlock from './VerificationBlock'
 
@@ -42,9 +42,11 @@ interface Props {
   onUrlChange: (url: string) => void
   verification: Verification[]
   onVerificationChange: (verification: Verification[]) => void
+  options: Options
+  onOptionsChange: (options: Options) => void
 }
 
-export default function BlockEditor({ steps, onStepsChange, url, onUrlChange, verification, onVerificationChange }: Props) {
+export default function BlockEditor({ steps, onStepsChange, url, onUrlChange, verification, onVerificationChange, options, onOptionsChange }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -148,6 +150,50 @@ export default function BlockEditor({ steps, onStepsChange, url, onUrlChange, ve
           }}>
           + Ajouter une vérification
         </button>
+      </div>
+
+      {/* ── Options section ── */}
+      <div style={{ borderTop: '2px solid #e5e7eb', padding: '8px 12px 4px' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Options
+        </div>
+      </div>
+
+      <div style={{ padding: '4px 12px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div>
+          <label style={{ display: 'block', fontSize: 11, color: '#6b7280', marginBottom: 2 }}>timeout (ms)</label>
+          <input
+            type="number"
+            value={options.timeout ?? ''}
+            onChange={(e) => onOptionsChange({ ...options, timeout: e.target.value ? Number(e.target.value) : undefined })}
+            placeholder="30000"
+            style={{ border: '1px solid #d1d5db', borderRadius: 4, padding: '4px 8px', fontSize: 12, width: '100%', boxSizing: 'border-box' }}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 11, color: '#6b7280', marginBottom: 2 }}>verificationMode</label>
+          <select
+            value={options.verificationMode ?? ''}
+            onChange={(e) => onOptionsChange({ ...options, verificationMode: e.target.value === 'all' || e.target.value === 'any' ? e.target.value : undefined })}
+            style={{ border: '1px solid #d1d5db', borderRadius: 4, padding: '4px 8px', fontSize: 12, width: '100%', boxSizing: 'border-box', background: 'white' }}
+          >
+            <option value="">—</option>
+            <option value="all">all</option>
+            <option value="any">any</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 11, color: '#6b7280', marginBottom: 2 }}>debug</label>
+          <select
+            value={options.debug === undefined ? '' : String(options.debug)}
+            onChange={(e) => onOptionsChange({ ...options, debug: e.target.value === '' ? undefined : e.target.value === 'true' })}
+            style={{ border: '1px solid #d1d5db', borderRadius: 4, padding: '4px 8px', fontSize: 12, width: '100%', boxSizing: 'border-box', background: 'white' }}
+          >
+            <option value="">—</option>
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+        </div>
       </div>
     </div>
   )

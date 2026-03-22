@@ -110,3 +110,11 @@ export const VERIFICATION_TYPES: VerificationType[] = [
   'selector',
   'title',
 ]
+
+// ─── Options type ──────────────────────────────────────────────────────────────
+
+export interface Options {
+  timeout?: number
+  debug?: boolean
+  verificationMode?: 'all' | 'any'
+}

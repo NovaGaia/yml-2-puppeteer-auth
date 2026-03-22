@@ -1,6 +1,6 @@
 import { load, dump } from 'js-yaml'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Step, Verification } from '../types'
+import type { Step, Verification, Options } from '../types'
 
 // ─── Pure functions (exported for testing) ────────────────────────────────────
 
@@ -96,6 +96,46 @@ export function patchYamlVerification(yaml: string, verification: Verification[]
 }
 
 /**
+ * Extract options from a YAML string.
+ * Returns {} if absent or invalid.
+ */
+export function yamlToOptions(yaml: string): Options {
+  if (!yaml.trim()) return {}
+  try {
+    const doc = load(yaml) as Record<string, unknown> | null
+    if (!doc || typeof doc !== 'object') return {}
+    const opts = doc['options']
+    if (!opts || typeof opts !== 'object') return {}
+    return opts as Options
+  } catch {
+    return {}
+  }
+}
+
+/**
+ * Replace options in the existing YAML string.
+ * Removes the options key when all fields are undefined.
+ * Preserves all other sections.
+ */
+export function patchYamlOptions(yaml: string, options: Options): string {
+  try {
+    const doc = (load(yaml) as Record<string, unknown> | null) ?? {}
+    const cleaned: Record<string, unknown> = {}
+    if (options.timeout !== undefined) cleaned['timeout'] = options.timeout
+    if (options.debug !== undefined) cleaned['debug'] = options.debug
+    if (options.verificationMode !== undefined) cleaned['verificationMode'] = options.verificationMode
+    if (Object.keys(cleaned).length === 0) {
+      delete doc['options']
+    } else {
+      doc['options'] = cleaned
+    }
+    return dump(doc, { lineWidth: -1 })
+  } catch {
+    return dump({ options }, { lineWidth: -1 })
+  }
+}
+
+/**
  * Replace authentication.url in the existing YAML string.
  * Preserves all other sections.
  */
@@ -127,6 +167,8 @@ interface UseStepSyncResult {
   onUrlChange: (url: string) => void
   verification: Verification[]
   onVerificationChange: (verification: Verification[]) => void
+  options: Options
+  onOptionsChange: (options: Options) => void
   onYamlEdit: (newYaml: string) => void
   localYaml: string
   yamlError: boolean
@@ -140,6 +182,7 @@ export function useStepSync({
   const [steps, setSteps] = useState<Step[]>(() => yamlToSteps(yaml) ?? [])
   const [url, setUrl] = useState(() => yamlToUrl(yaml))
   const [verification, setVerification] = useState<Verification[]>(() => yamlToVerification(yaml) ?? [])
+  const [options, setOptions] = useState<Options>(() => yamlToOptions(yaml))
   const [localYaml, setLocalYaml] = useState(yaml)
   const [yamlError, setYamlError] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -152,6 +195,7 @@ export function useStepSync({
     setSteps(parsed ?? [])
     setUrl(yamlToUrl(yaml))
     setVerification(yamlToVerification(yaml) ?? [])
+    setOptions(yamlToOptions(yaml))
     setLocalYaml(yaml)
     setYamlError(false)
   }, [yaml])
@@ -187,6 +231,16 @@ export function useStepSync({
     [onYamlChange],
   )
 
+  const onOptionsChange = useCallback(
+    (newOptions: Options) => {
+      setOptions(newOptions)
+      const newYaml = patchYamlOptions(localYamlRef.current, newOptions)
+      setLocalYaml(newYaml)
+      onYamlChange(newYaml)
+    },
+    [onYamlChange],
+  )
+
   // YAML → blocks: debounced, blocks unchanged if syntax invalid
   const onYamlEdit = useCallback(
     (newYaml: string) => {
@@ -201,6 +255,7 @@ export function useStepSync({
           setSteps(parsed)
           setUrl(yamlToUrl(newYaml))
           setVerification(yamlToVerification(newYaml) ?? [])
+          setOptions(yamlToOptions(newYaml))
         }
         onYamlChange(newYaml)
       }, debounceMs)
@@ -208,5 +263,5 @@ export function useStepSync({
     [onYamlChange, debounceMs],
   )
 
-  return { steps, onStepsChange, url, onUrlChange, verification, onVerificationChange, onYamlEdit, localYaml, yamlError }
+  return { steps, onStepsChange, url, onUrlChange, verification, onVerificationChange, options, onOptionsChange, onYamlEdit, localYaml, yamlError }
 }
