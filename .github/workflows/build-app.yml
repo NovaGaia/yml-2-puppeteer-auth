@@ -32,6 +32,14 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Debug Apple secrets length
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+        run: |
+          echo "APPLE_TEAM_ID length: ${#APPLE_TEAM_ID}"
+          echo "APPLE_ID length: ${#APPLE_ID}"
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
