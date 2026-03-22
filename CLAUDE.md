@@ -1,128 +1,62 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Methodologie
+
+- **Nouvelle feature** → Brainstorming d'abord (questions une par une, 2-3 approches, spec validée) · jamais coder sans avoir conçu et validé
+- **Chaque tâche** → APEX : **A**nalyze (lire le code, comprendre le contexte) · **P**lan (présenter et attendre validation) · **E**xecute (implémenter après accord) · e**X**amine (tester, vérifier les régressions)
+
+### Commandes de vérification (eXamine)
+
+```bash
+pnpm test    # vitest via Turborepo
+pnpm lint    # eslint src via Turborepo
+pnpm build   # build via Turborepo
+```
+
+## Règles RHE
+
+- **Langue & style** · Toujours en français · concis sauf décisions importantes (justifier) · si bloqué : exposer le problème + options et attendre le choix
+- **Workflow** · Brainstorming avant tout dev · APEX pour chaque tâche · git pull avant de modifier du code
+- **Worktrees & branches** · Toujours dans un worktree isolé (skill `using-git-worktrees`) · jamais sur la branche principale · nommage : `feat/` `fix/` `chore/` `docs/` `refactor/`
+- **Git** · Skill `git-commit` obligatoire · conventional commits · jamais commit/push sans accord explicite
+- **Dépendances** · Vérifier l'existant d'abord · si lib externe : justifier + dernière version stable · zéro dette technique · Context7 en priorité pour la documentation
+- **Tests** · TDD sur logique critique, pragmatique ailleurs · jamais "terminé" sans tests · fournir un plan de test humain · validation = confirmation explicite de l'utilisateur
+- **Revue** · Sur features importantes : skills `requesting-code-review` + `simplify`
+- **Code** · Tout en anglais (variables, fonctions, commentaires, messages d'erreur)
+- **Sécurité** · Jamais de secrets en dur · toujours via `.env` · vérifier `.gitignore` avant tout commit
+- **Dette technique** · Si code fragile ou TODO découvert : signaler immédiatement avec suggestion, ne pas corriger silencieusement
+- **Documentation** · Mettre à jour README/JSDoc/commentaires après chaque feature
+- **Breaking changes** · S'arrêter immédiatement et prévenir avant de continuer
+- **Versioning** · Releases via GitHub Actions + GitHub Releases · Changesets (monorepo Node) · changelog après chaque feature ou fix significatif
 
 ## Stack
 
-- **Package manager**: pnpm workspaces + Turborepo
-- **Modules**: `type: module` (ES modules in source)
-- **Entry point**: `packages/lib/scripts/puppeteer-generic.cjs` (CommonJS — required by Lighthouse `--puppeteer-script`)
+- **Package manager** : pnpm workspaces + Turborepo
+- **Modules** : `type: module` (ES modules) — sauf entry point Lighthouse en CommonJS
+- **Entry point** : `packages/lib/scripts/puppeteer-generic.cjs`
 
 ## Architecture
 
-**Runtime interpretation** (not code generation): a single generic Puppeteer script reads and executes YAML configurations dynamically at runtime. The YAML is the source of truth — no build step, no generated files to manage. No modes, no code generation, no ModeFactory.
+Interprétation à l'exécution (pas de génération de code) : un seul script Puppeteer générique lit et exécute des configs YAML dynamiquement.
 
 ```
-YAML/JSON config
-    ↓
-ConfigLoader → Validator → Interpreter (runtime)
-                                ↓
-                    scripts/puppeteer-generic.cjs
-                                ↓
-                        Lighthouse audit
+YAML/JSON config → ConfigLoader → Validator → Interpreter → puppeteer-generic.cjs → Lighthouse
 ```
 
-### Key components (`packages/lib`)
+### Composants clés (`packages/lib/src`)
 
-- **`src/core/config-loader.js`** — loads and parses YAML/JSON, resolves env vars
-- **`src/core/validator.js`** — validates config against schema, returns `{ valid, errors }`
-- **`src/core/interpreter.js`** — executes auth steps with Puppeteer at runtime (`authenticate()`, `verify()`, `executeStep()`)
-- **`src/helpers/`** — selector validation, wait utilities, verification handlers
-- **`src/cli/cli.js`** — CLI interface (`validate`, `test`)
-- **`src/lighthouse.js`** — public API for Lighthouse integrations (`authenticateWithPage(page, configPath, options)`)
-- **`scripts/puppeteer-generic.cjs`** — CommonJS entry point for Lighthouse; loads YAML via `AUTH_CONFIG` env var
+- **`core/config-loader.js`** — charge YAML/JSON, résout les env vars
+- **`core/validator.js`** — valide la config, retourne `{ valid, errors }`
+- **`core/interpreter.js`** — exécute les steps Puppeteer (`authenticate()`, `verify()`, `executeStep()`)
+- **`helpers/`** — validation sélecteurs, utilitaires wait, handlers vérification
+- **`cli/cli.js`** — CLI (`validate`, `test`)
+- **`lighthouse.js`** — API publique (`authenticateWithPage(page, configPath, options)`)
+- **`scripts/puppeteer-generic.cjs`** — entry point CJS Lighthouse (via `AUTH_CONFIG` env var)
 
-There is no `src/modes/` directory — a single generic interpreter handles all scenarios.
-
-## Config format (YAML/JSON)
-
-```yaml
-name: "Scenario name"
-
-authentication:
-  url: "https://example.com/login"
-  steps:
-    - action: waitForSelector
-      selector: "input[type='email']"
-      timeout: 10000
-      errorSelector: ".error-banner"   # fail immediately if this element appears
-
-    - action: fill
-      selector: "input[type='email']"
-      valueEnv: "LOGIN_VALUE"          # reads from process.env.LOGIN_VALUE
-
-    - action: fill
-      selector: "input[name='otp']"
-      valueEnv: "TOTP_SECRET"
-      valueType: totp                  # generates OTP code at runtime (RFC 6238)
-
-    - action: click
-      selector: "button[type='submit']"
-
-    - action: waitForNavigation
-      timeout: 15000
-
-    - action: assertNotPresent
-      selector: ".error-message"
-
-    - action: wait
-      duration: 3000                   # hard sleep — use only when no selector signal available
-
-verification:
-  - type: cookie
-    name: "session_id"
-    required: true
-  - type: localStorage
-    key: "auth-token"
-    required: true
-  - type: url
-    contains: "/dashboard"
-    required: true
-  - type: selector
-    selector: ".user-menu"
-    required: true
-  - type: title
-    contains: "Dashboard"
-    required: false
-
-options:
-  timeout: 30000
-  debug: false
-  verificationMode: all             # all | any
-```
-
-## Environment variables
-
-| Variable | Description |
-|----------|-------------|
-| `AUTH_CONFIG` | Path to the YAML config file (read by the generic script) |
-| `LOGIN_VALUE` | Login credential |
-| `PASS_VALUE` | Password credential |
-| `TOTP_SECRET` | Base32 TOTP secret for 2FA |
-| `DEBUG` | Enable verbose logging (`true\|false`) |
-| `TIMEOUT` | Override global timeout (ms) |
-
-Credentials are never in YAML — always via `valueEnv` pointing to an env var.
-
-## Lighthouse integration
-
-```bash
-export AUTH_CONFIG="./auth.yml"
-export LOGIN_VALUE="user@example.com"
-export PASS_VALUE="secret"
-lighthouse https://example.com --puppeteer-script=packages/lib/scripts/puppeteer-generic.cjs
-```
-
-The script receives `{ page, session, flow, position, urls }` from Lighthouse props.
-
-## Monorepo structure
+## Monorepo
 
 ```
-/
-├── packages/
-│   ├── lib/    — Node.js library (published to npm as yml-2-puppeteer-auth)
-│   └── app/    — Tauri desktop app with React frontend
-├── pnpm-workspace.yaml
-├── turbo.json
-└── .changeset/
+packages/
+├── lib/    — Node.js library (npm : yml-2-puppeteer-auth)
+└── app/    — Tauri desktop app + React frontend
 ```
