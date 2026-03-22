@@ -82,21 +82,17 @@ node packages/lib/src/cli/cli.js test
 
 Résultat attendu : erreur `errorSelector detected`.
 
-## Lancer tous les tests via pnpm
+## Lancer les tests via pnpm
 
-Depuis la racine du monorepo :
-
-```bash
-pnpm --filter lib test:e2e
-```
-
-Ou depuis `packages/lib` :
+Depuis `packages/lib` (ou `pnpm --filter lib <script>` depuis la racine) :
 
 ```bash
-pnpm test:e2e
+pnpm e2e:login   # login simple (testuser)
+pnpm e2e:totp    # login avec TOTP (testuser-totp)
+pnpm e2e:error   # scénario négatif — doit échouer sur errorSelector
 ```
 
-Les variables d'environnement sont chargées depuis `.env.e2e` automatiquement.
+Les variables d'environnement sont chargées depuis `e2e/.env.e2e` automatiquement.
 
 ## Arrêter Keycloak
 

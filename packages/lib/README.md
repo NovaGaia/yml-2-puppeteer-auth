@@ -251,6 +251,7 @@ See [`examples/`](./examples/) for ready-to-use scenarios:
 
 - `login-simple.yml` — single-step form
 - `login-two-steps.yml` — multi-step flow
+- `login-one-page.yml` — email + password on the same page
 - `login-totp.yml` — with 2FA (TOTP)
 - `login-with-error-handling.yml` — inline error detection
 - `wordpress-2fa.yml` — WordPress + Wordfence 2FA

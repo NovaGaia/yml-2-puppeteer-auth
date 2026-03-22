@@ -1,52 +1,47 @@
-# Custom Puppeteer Script Example
+# Custom Puppeteer Script — sans yml-2-puppeteer-auth
 
-Suivant votre contexte, il peut être nécessaire de réaliser des audits de sites nécessitant une authentification complexe (ex. WordPress, Prestashop, etc.). Dans ce cas, il est possible d'utiliser un fichier de script Puppeteer custom pour réaliser les étapes d'authentification et de navigation avant de lancer les mesures d'EcoIndex.
+Exemple de référence : script Puppeteer impératif (JS pur) pour l'authentification WordPress et Okta avec `lighthouse-plugin-ecoindex`.
 
-> [!warning] > **Points d'attention:**
->
-> - Due à une limitation de Lighthouse, **on ne peut pas mesurer plusieurs fois la même url**. Le workaround est d'appeler les urls avec des faux paramètres de navigation, ex. https://greenit.eco/?test=123 et https://greenit.eco/ pour les différencier.
-> - Les scénarios complexes avec des pages d'authentifications et des soumissions de formulaires, des pages de redirection, etc. seront mal mesurées (à cause des navigations entre les pages). Il faut donc être vigilant sur les pages à mesurer et ne pas hésiter à ajouter plusieurs pages dans le fichier de configuration en utilisant des faux paramètres de navigation (ex. https://greenit.eco/?test=123).
-> - Hors des pages d'authentification, les pages doivent être utilisée avec les scénarios de mesure de parcours standards `startEcoindexPageMesure(page, session)` et `endEcoindexPageMesure(flow)`.
->   !!!
+Cet exemple illustre l'approche **sans librairie** — l'authentification est codée directement en JS. L'approche [`with-lib/`](../with-lib/) est recommandée pour les nouveaux projets.
+
+## Fichiers
+
+- **`index.cjs`** — script principal passé à `--puppeteer-script`. Lit `AUTH_MODE` pour dispatcher vers WordPress ou Okta.
+- **`puppeteer-helper.js`** — helpers d'authentification (`wpConnect`, `oktaConnect`) et helpers EcoIndex (`startEcoindexPageMesure`, `endEcoindexPageMesure`).
+- **`.env.example`** — modèle de variables d'environnement à copier en `.env`.
+
+## Variables d'environnement
+
+| Variable | Description |
+|----------|-------------|
+| `AUTH_MODE` | Mode d'auth : `wordpress` ou `okta` |
+| `AUTH_URL` | URL de la page de login |
+| `LOGIN_FIELD` | Sélecteur CSS du champ login (défaut : `#user_login`) |
+| `LOGIN_VALUE` | Identifiant |
+| `PASS_FIELD` | Sélecteur CSS du champ mot de passe (défaut : `#user_pass`) |
+| `PASS_VALUE` | Mot de passe |
+| `ONE_STEP_LOGIN` | `true` si email + mot de passe sont sur la même page (Okta) |
+| `HOME_TITLE` | Titre de la page d'accueil post-login (vérification) |
+| `DEBUG` | `true` pour activer les logs détaillés |
 
 ## Utilisation
 
-### Utilisation en ligne de commande
+```bash
+cp .env.example .env
+# remplir .env avec vos valeurs
 
-```shell
-npx lighthouse-plugin-ecoindex collect -u https://greenit.eco/ -u https://greenit.eco/wp-login.php/ -u https://greenit.eco/wp-admin/plugins.php --puppeteer-script ./puppeteer-script.mjs
+npx lighthouse-plugin-ecoindex collect \
+  -u https://mon-site.fr/wp-login.php \
+  -u https://mon-site.fr/wp-admin/ \
+  --puppeteer-script ./index.cjs
 ```
 
-### Utilisation avec un fichier de configuration `input-file.json`
+## Comparaison avec with-lib
 
-```json
-{
-  // ...
-  "puppeteer-script": "./puppeteer-script.mjs"
-  // ...
-}
-```
-
-## Exemple de script Puppeteer custom
-
-### Script Puppeteer custom
-
-Modèle de fichier de script Puppeteer custom (index.cjs)
-
-`./custom-puppeteer-script-example/index.cjs`
-
-Modèle de fichier de script Puppeteer custom (suite du fichier index.cjs)
-
-`./custom-puppeteer-script-example/puppeteer-helper.js`
-
-### Utilisation de variables d'environnement dans le script Puppeteer custom
-
-> [!warning]
-> L'utilisation de variables d'environnement est recommandée pour éviter de stocker des informations sensibles dans votre script.
-
-Vous pouvez renseigner les valeurs d'environnement dans un fichier `.env` à la racine de votre projet, puis les utiliser dans votre script Puppeteer custom. Par exemple, avec le package `dotenv`, vous pouvez charger les variables d'environnement et les utiliser dans votre script.  
-**Ceci n'est qu'un exemple, vous pouvez utiliser n'importe quelle méthode pour gérer vos variables d'environnement**.
-
-Modèle de fichier de values d'environnement pour le fichier de script Puppeteer custom (.env)
-
-`./custom-puppeteer-script-example/.env.example`
+| | without-lib | with-lib |
+|---|---|---|
+| Flow auth | JS impératif (`wpConnect`, `oktaConnect`) | YAML déclaratif |
+| Sélecteurs | Via env vars (`LOGIN_FIELD`, `PASS_FIELD`) | Dans le YAML |
+| Mode dispatching | `AUTH_MODE=wordpress\|okta` | `AUTH_CONFIG=./auth-wordpress.yml` |
+| Vérification | Manuelle (cookie / token) | Dans le YAML (`verification:`) |
+| EcoIndex helpers | `puppeteer-helper.js` (auth + ecoindex) | `ecoindex-helper.js` (ecoindex uniquement) |

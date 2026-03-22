@@ -26,9 +26,10 @@ ConfigLoader → Validator → Interpreter (runtime)
 
 - **`src/core/config-loader.js`** — loads and parses YAML/JSON, resolves env vars
 - **`src/core/validator.js`** — validates config against schema, returns `{ valid, errors }`
-- **`src/core/interpreter.js`** — executes auth steps with Puppeteer at runtime (`authenticate()`, `verify()`, `test()`)
+- **`src/core/interpreter.js`** — executes auth steps with Puppeteer at runtime (`authenticate()`, `verify()`, `executeStep()`)
 - **`src/helpers/`** — selector validation, wait utilities, verification handlers
 - **`src/cli/cli.js`** — CLI interface (`validate`, `test`)
+- **`src/lighthouse.js`** — public API for Lighthouse integrations (`authenticateWithPage(page, configPath, options)`)
 - **`scripts/puppeteer-generic.cjs`** — CommonJS entry point for Lighthouse; loads YAML via `AUTH_CONFIG` env var
 
 There is no `src/modes/` directory — a single generic interpreter handles all scenarios.

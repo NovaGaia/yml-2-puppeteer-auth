@@ -22,6 +22,14 @@ Monorepo for `yml-2-puppeteer-auth` — a YAML-driven Puppeteer authentication l
 
 See [`packages/lib/README.md`](./packages/lib/README.md) for the library documentation.
 
+## Documentation
+
+| File | Description |
+|------|-------------|
+| [`packages/lib/README.md`](./packages/lib/README.md) | Library reference (YAML format, CLI, Node.js API, Lighthouse integration) |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Internal architecture, execution flows, extensibility guide |
+| [`TESTING.md`](./TESTING.md) | Testing workflow, debugging guide, e2e Keycloak setup |
+
 ## Development
 
 ```bash
