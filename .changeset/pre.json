@@ -6,6 +6,7 @@
     "yml-2-puppeteer-auth": "0.1.0"
   },
   "changesets": [
+    "doc-cleanup",
     "initial-release",
     "lighthouse-api-and-doc-update"
   ]
