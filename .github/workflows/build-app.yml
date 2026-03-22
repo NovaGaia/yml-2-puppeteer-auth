@@ -47,6 +47,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: packages/app
+          tauriScript: pnpm tauri
           tagName: ${{ github.ref_name }}
           releaseName: 'YML 2 Puppeteer v__VERSION__'
           releaseBody: 'Voir les assets ci-dessous pour télécharger et installer cette version.'
